@@ -791,22 +791,20 @@
         el.focus();
       } catch (e) {
       }
-      const mouseEvents = ["pointerdown", "mousedown", "pointerup", "mouseup", "click"];
-      mouseEvents.forEach((type) => {
-        const evt = new MouseEvent(type, {
+      try {
+        el.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true, view: window }));
+        el.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true, view: window }));
+        el.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, cancelable: true, view: window }));
+        el.dispatchEvent(new MouseEvent("mouseup", { bubbles: true, cancelable: true, view: window }));
+        el.click();
+      } catch (e) {
+        const evt = new MouseEvent("click", {
           view: window,
           bubbles: true,
           cancelable: true,
           buttons: 1
         });
         el.dispatchEvent(evt);
-      });
-      if (el instanceof HTMLAnchorElement && el.href) {
-        if (el.target === "_blank") {
-          window.open(el.href, "_blank");
-        } else if (!el.href.startsWith("javascript:")) {
-          window.location.href = el.href;
-        }
       }
       return true;
     }
@@ -1346,8 +1344,10 @@
         if (!isDragging || !this.host) return;
         const dx = startX - e.clientX;
         const dy = startY - e.clientY;
-        this.host.style.right = `${Math.max(10, initialRight + dx)}px`;
-        this.host.style.bottom = `${Math.max(10, initialBottom + dy)}px`;
+        const maxRight = Math.max(16, window.innerWidth - 370);
+        const maxBottom = Math.max(16, window.innerHeight - 130);
+        this.host.style.right = `${Math.min(maxRight, Math.max(16, initialRight + dx))}px`;
+        this.host.style.bottom = `${Math.min(maxBottom, Math.max(16, initialBottom + dy))}px`;
       });
       window.addEventListener("mouseup", () => {
         isDragging = false;
@@ -2372,6 +2372,45 @@ Identify the best target element(s) to fulfill the user's command and return the
           }
         }
       });
+      const handleUnload = () => {
+        if (this.isListening) {
+          this.speechEngine.stop();
+          this.speechEngine.abort();
+        }
+        tts.stop();
+      };
+      window.addEventListener("beforeunload", handleUnload);
+      window.addEventListener("pagehide", handleUnload);
+      let lastUrl = window.location.href;
+      const handleNavigation = () => {
+        if (window.location.href !== lastUrl) {
+          lastUrl = window.location.href;
+          this.discovery.reset();
+          this.labeler.hide();
+          this.loginAssistant.reset();
+          this.pendingCandidates = [];
+          this.pendingConfirmationStep = null;
+          this.stopListening();
+          setTimeout(() => {
+            this.analyzer.refresh();
+          }, 400);
+        }
+      };
+      window.addEventListener("popstate", handleNavigation);
+      window.addEventListener("hashchange", handleNavigation);
+      const origPush = history.pushState;
+      const selfApp = this;
+      history.pushState = function(...args) {
+        const res = origPush.apply(this, args);
+        handleNavigation();
+        return res;
+      };
+      const origReplace = history.replaceState;
+      history.replaceState = function(...args) {
+        const res = origReplace.apply(this, args);
+        handleNavigation();
+        return res;
+      };
       this.analyzer.refresh();
     }
     applySettings() {
@@ -2735,7 +2774,7 @@ Identify the best target element(s) to fulfill the user's command and return the
       this.overlay.updateStatus("done", "Ready! Speak any command.");
     }
   };
-  if (typeof window !== "undefined") {
+  if (typeof window !== "undefined" && window.self === window.top) {
     window.__voxnav_instance = new VoxNavContentApp();
   }
 })();

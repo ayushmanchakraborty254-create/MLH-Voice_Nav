@@ -50,24 +50,24 @@ export class ActionEngine {
       // ignore
     }
 
-    const mouseEvents = ["pointerdown", "mousedown", "pointerup", "mouseup", "click"];
-    mouseEvents.forEach((type) => {
-      const evt = new MouseEvent(type, {
+    // Dispatch pointer events for modern SPAs, then fire native el.click()
+    try {
+      el.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true, view: window }));
+      el.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true, view: window }));
+      el.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, cancelable: true, view: window }));
+      el.dispatchEvent(new MouseEvent("mouseup", { bubbles: true, cancelable: true, view: window }));
+      
+      // Native el.click() triggers the browser's exact navigation and handlers ONCE without duplicate tabs
+      el.click();
+    } catch (e) {
+      // Fallback if el.click() throws
+      const evt = new MouseEvent("click", {
         view: window,
         bubbles: true,
         cancelable: true,
         buttons: 1
       });
       el.dispatchEvent(evt);
-    });
-
-    // If it's an anchor tag with href, ensure navigation if event was not prevented
-    if (el instanceof HTMLAnchorElement && el.href) {
-      if (el.target === "_blank") {
-        window.open(el.href, "_blank");
-      } else if (!el.href.startsWith("javascript:")) {
-        window.location.href = el.href;
-      }
     }
 
     return true;

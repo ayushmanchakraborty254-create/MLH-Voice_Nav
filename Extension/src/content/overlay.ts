@@ -375,8 +375,10 @@ export class FloatingOverlay {
       if (!isDragging || !this.host) return;
       const dx = startX - e.clientX;
       const dy = startY - e.clientY;
-      this.host.style.right = `${Math.max(10, initialRight + dx)}px`;
-      this.host.style.bottom = `${Math.max(10, initialBottom + dy)}px`;
+      const maxRight = Math.max(16, window.innerWidth - 370);
+      const maxBottom = Math.max(16, window.innerHeight - 130);
+      this.host.style.right = `${Math.min(maxRight, Math.max(16, initialRight + dx))}px`;
+      this.host.style.bottom = `${Math.min(maxBottom, Math.max(16, initialBottom + dy))}px`;
     });
 
     window.addEventListener("mouseup", () => {

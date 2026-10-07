@@ -110,7 +110,53 @@ export class VoxNavContentApp {
       }
     });
 
-    // 5. Update element index
+    // 5. Clean teardown on page unload or forward navigation
+    const handleUnload = () => {
+      if (this.isListening) {
+        this.speechEngine.stop();
+        this.speechEngine.abort();
+      }
+      tts.stop();
+    };
+    window.addEventListener("beforeunload", handleUnload);
+    window.addEventListener("pagehide", handleUnload);
+
+    // 6. SPA navigation & redirect detection (History API + popstate + hashchange)
+    let lastUrl = window.location.href;
+    const handleNavigation = () => {
+      if (window.location.href !== lastUrl) {
+        lastUrl = window.location.href;
+        this.discovery.reset();
+        this.labeler.hide();
+        this.loginAssistant.reset();
+        this.pendingCandidates = [];
+        this.pendingConfirmationStep = null;
+        this.stopListening(); // Reset voice state cleanly on redirected page
+        setTimeout(() => {
+          this.analyzer.refresh();
+        }, 400);
+      }
+    };
+
+    window.addEventListener("popstate", handleNavigation);
+    window.addEventListener("hashchange", handleNavigation);
+
+    const origPush = history.pushState;
+    const selfApp = this;
+    history.pushState = function (...args) {
+      const res = origPush.apply(this, args);
+      handleNavigation();
+      return res;
+    };
+
+    const origReplace = history.replaceState;
+    history.replaceState = function (...args) {
+      const res = origReplace.apply(this, args);
+      handleNavigation();
+      return res;
+    };
+
+    // 7. Update element index
     this.analyzer.refresh();
   }
 
@@ -551,7 +597,7 @@ export class VoxNavContentApp {
   }
 }
 
-// Auto-instantiate on webpage load
-if (typeof window !== "undefined") {
+// Auto-instantiate ONLY in top-level window (never inside embedded iframes/ads/video players)
+if (typeof window !== "undefined" && window.self === window.top) {
   (window as any).__voxnav_instance = new VoxNavContentApp();
 }
