@@ -1,6 +1,7 @@
 /**
  * VoxNav - Content Script Main Coordinator
  * Integrates speech recognition, page analysis, action execution, and UI overlay.
+ * Optimized with echo cancellation, command debouncing, and jitter-free state handling.
  */
 
 import { ElementDiscovery } from "./element-discovery";
@@ -33,6 +34,10 @@ export class VoxNavContentApp {
   private aiPlanner: AIPlanner;
 
   private isListening: boolean = false;
+  private isProcessingCommand: boolean = false;
+  private lastExecutedCommand: string = "";
+  private lastExecutedTimestamp: number = 0;
+
   private pendingConfirmationStep: ActionStep | null = null;
   private pendingCandidates: SemanticElement[] = [];
   private lastCommandText: string = "";
@@ -147,7 +152,7 @@ export class VoxNavContentApp {
           sendResponse({ success: true });
           break;
       }
-      return true; // Keep message channel open for async response
+      return true;
     });
   }
 
@@ -162,14 +167,14 @@ export class VoxNavContentApp {
   public startListening(): void {
     this.overlay.show();
     this.overlay.updateStatus("listening");
-    this.speechEngine.start();
     this.isListening = true;
-    tts.speak("Listening");
+    // CRITICAL: Do NOT speak "Listening" via TTS here, as the mic will hear it and glitch into a loop!
+    this.speechEngine.start();
   }
 
   public stopListening(): void {
-    this.speechEngine.stop();
     this.isListening = false;
+    this.speechEngine.stop();
     this.overlay.updateStatus("idle");
   }
 
@@ -179,8 +184,14 @@ export class VoxNavContentApp {
   }
 
   private handleSpeechTranscript(transcript: string, isFinal: boolean): void {
+    // 1. Guard against speech synthesis echo loop
+    if (tts.isCurrentlySpeaking()) {
+      return;
+    }
+
     this.overlay.setTranscript(transcript);
 
+    // 2. Only process final utterances
     if (isFinal) {
       this.handleCommand(transcript);
     }
@@ -188,7 +199,6 @@ export class VoxNavContentApp {
 
   private handleSpeechError(errorMsg: string): void {
     this.overlay.updateStatus("error", errorMsg);
-    tts.speak(errorMsg);
   }
 
   public toggleNumberedMode(): boolean {
@@ -197,267 +207,282 @@ export class VoxNavContentApp {
     this.overlay.setNumbersActive(isActive);
 
     if (isActive) {
-      tts.speak("Numbered mode active. Say a number to click.");
       this.overlay.updateStatus("done", "Numbers visible");
     } else {
-      tts.speak("Numbered mode closed.");
       this.overlay.updateStatus("idle");
     }
     return isActive;
   }
 
   /**
-   * Main Command Execution Pipeline
+   * Main Command Execution Pipeline with deduplication and state safety.
    */
   public async handleCommand(rawUtterance: string): Promise<void> {
     if (!rawUtterance || !rawUtterance.trim()) return;
 
-    this.lastCommandText = rawUtterance;
+    const cleanInput = rawUtterance.trim();
+
+    // Deduplication check: ignore identical commands within 1.4s
+    const now = Date.now();
+    if (cleanInput.toLowerCase() === this.lastExecutedCommand.toLowerCase() && now - this.lastExecutedTimestamp < 1400) {
+      return;
+    }
+
+    if (this.isProcessingCommand) {
+      return;
+    }
+
+    this.isProcessingCommand = true;
+    this.lastExecutedCommand = cleanInput;
+    this.lastExecutedTimestamp = now;
+    this.lastCommandText = cleanInput;
+
     this.overlay.updateStatus("understanding");
-    this.overlay.setTranscript(rawUtterance);
+    this.overlay.setTranscript(cleanInput);
 
-    // 1. Check for Pending High-Impact Confirmation
-    if (this.pendingConfirmationStep) {
-      if (/^(confirm|yes|proceed|sure|haan|thik ache)\b/i.test(rawUtterance)) {
-        const step = this.pendingConfirmationStep;
-        this.pendingConfirmationStep = null;
-        this.overlay.updateStatus("executing", step.description);
-        this.actionEngine.executeStep(step);
-        this.finishCommand(`Action confirmed and executed: ${step.description}`);
-        return;
-      } else {
-        this.pendingConfirmationStep = null;
-        this.finishCommand("Action cancelled.");
+    try {
+      // 1. Check for Pending High-Impact Confirmation
+      if (this.pendingConfirmationStep) {
+        if (/^(confirm|yes|proceed|sure|haan|thik ache)\b/i.test(cleanInput)) {
+          const step = this.pendingConfirmationStep;
+          this.pendingConfirmationStep = null;
+          this.overlay.updateStatus("executing", step.description);
+          this.actionEngine.executeStep(step);
+          this.finishCommand(`Confirmed: ${step.description}`);
+          return;
+        } else {
+          this.pendingConfirmationStep = null;
+          this.finishCommand("Action cancelled.");
+          return;
+        }
+      }
+
+      // 2. Check for Pending Disambiguation Candidates
+      if (this.pendingCandidates.length > 0) {
+        const chosenNum = parseInt(cleanInput.replace(/\D/g, ""), 10);
+        if (chosenNum >= 1 && chosenNum <= this.pendingCandidates.length) {
+          const selected = this.pendingCandidates[chosenNum - 1];
+          this.pendingCandidates = [];
+          this.labeler.hide();
+          this.overlay.updateStatus("executing", `Item ${chosenNum}`);
+          const el = this.discovery.getElementById(selected.id);
+          if (el) {
+            this.actionEngine.clickElement(el);
+            this.finishCommand(`Clicked option ${chosenNum}`);
+          }
+          return;
+        }
+      }
+
+      // 3. Parse Command with Natural Language Engine
+      const parsed = CommandParser.parse(cleanInput);
+
+      // 4. Handle System / Accessibility Metacommands
+      if (parsed.intent === "START_DEMO") {
+        await this.startInteractiveDemo();
         return;
       }
-    }
-
-    // 2. Check for Pending Disambiguation Candidates
-    if (this.pendingCandidates.length > 0) {
-      const chosenNum = parseInt(rawUtterance.replace(/\D/g, ""), 10);
-      if (chosenNum >= 1 && chosenNum <= this.pendingCandidates.length) {
-        const selected = this.pendingCandidates[chosenNum - 1];
-        this.pendingCandidates = [];
+      if (parsed.intent === "HELP") {
+        const helpMsg = "Try: click login, open pricing, scroll down, show numbers, or search.";
+        this.finishCommand(helpMsg);
+        return;
+      }
+      if (parsed.intent === "SHOW_NUMBERS") {
+        this.labeler.show(this.analyzer.refresh());
+        this.overlay.setNumbersActive(true);
+        this.finishCommand("Numbers visible");
+        return;
+      }
+      if (parsed.intent === "HIDE_NUMBERS") {
         this.labeler.hide();
-        this.overlay.updateStatus("executing", `Clicking ${selected.text || "item"}`);
-        const el = this.discovery.getElementById(selected.id);
-        if (el) {
-          this.actionEngine.clickElement(el);
-          this.finishCommand(`Selected item ${chosenNum} clicked`);
-        }
+        this.overlay.setNumbersActive(false);
+        this.finishCommand("Numbers hidden");
         return;
       }
-    }
 
-    // 3. Parse Command with Natural Language Engine
-    const parsed = CommandParser.parse(rawUtterance);
-
-    // 4. Handle System / Accessibility Metacommands
-    if (parsed.intent === "START_DEMO") {
-      this.startInteractiveDemo();
-      return;
-    }
-    if (parsed.intent === "HELP") {
-      const helpMsg = "You can say: click login, open pricing, scroll down, show numbers, search for topics, or read this page.";
-      tts.speak(helpMsg);
-      this.finishCommand(helpMsg);
-      return;
-    }
-    if (parsed.intent === "SHOW_NUMBERS") {
-      this.labeler.show(this.analyzer.refresh());
-      this.overlay.setNumbersActive(true);
-      this.finishCommand("Numbers displayed. Say a number to click.");
-      return;
-    }
-    if (parsed.intent === "HIDE_NUMBERS") {
-      this.labeler.hide();
-      this.overlay.setNumbersActive(false);
-      this.finishCommand("Numbers hidden.");
-      return;
-    }
-
-    // 5. Direct Number Target Selection
-    if (parsed.intent === "CLICK_NUMBER" && parsed.targetNumber !== undefined) {
-      const matchedSemantic = this.labeler.getElementByNumber(parsed.targetNumber);
-      if (matchedSemantic) {
-        const targetEl = this.discovery.getElementById(matchedSemantic.id);
-        if (targetEl) {
-          this.labeler.highlightBadge(parsed.targetNumber);
-          this.overlay.updateStatus("executing", `Item ${parsed.targetNumber}`);
-          this.actionEngine.clickElement(targetEl);
-          this.finishCommand(`Clicked item ${parsed.targetNumber}`);
-          return;
-        }
-      } else {
-        this.finishCommand(`Item number ${parsed.targetNumber} not found on this screen.`);
-        return;
-      }
-    }
-
-    // 6. Browser Tab Controls (Dispatched to background)
-    if (["NEW_TAB", "CLOSE_TAB", "NEXT_TAB", "PREVIOUS_TAB"].includes(parsed.intent)) {
-      if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
-        chrome.runtime.sendMessage({ type: "VOXNAV_TAB_ACTION", action: parsed.intent });
-        this.finishCommand(`Browser tab action: ${parsed.intent}`);
-        return;
-      }
-    }
-
-    // 7. Reading & Describing Accessibility
-    if (parsed.intent === "READ_PAGE" || parsed.intent === "DESCRIBE_PAGE") {
-      const outline = this.analyzer.getSpokenPageOutline();
-      tts.speak(outline);
-      this.finishCommand("Page overview read.");
-      return;
-    }
-
-    // 8. Scrolling Navigation
-    if (["SCROLL_DOWN", "SCROLL_UP", "SCROLL_TOP", "SCROLL_BOTTOM", "PAGE_DOWN", "PAGE_UP"].includes(parsed.intent)) {
-      this.actionEngine.executeStep({
-        type: parsed.intent,
-        description: `Scroll ${parsed.direction || "page"}`
-      });
-      this.finishCommand(`Scrolled ${parsed.direction?.toLowerCase() || "page"}`);
-      return;
-    }
-
-    // 9. Standard Browser History Navigation
-    if (["BACK", "FORWARD", "REFRESH", "HOME"].includes(parsed.intent)) {
-      this.actionEngine.executeStep({
-        type: parsed.intent,
-        description: `Navigate ${parsed.intent}`
-      });
-      this.finishCommand(`Navigating: ${parsed.intent}`);
-      return;
-    }
-
-    // 10. Search Queries
-    if (parsed.intent === "SEARCH" && parsed.value) {
-      const searchBox = this.analyzer.findPrimarySearchInput();
-      if (searchBox) {
-        const el = this.discovery.getElementById(searchBox.id);
-        if (el) {
-          this.actionEngine.typeIntoElement(el, parsed.value);
-          // Try submitting form or press Enter
-          const form = el.closest("form");
-          if (form) {
-            form.requestSubmit();
-          } else {
-            el.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", code: "Enter", bubbles: true }));
-          }
-          this.finishCommand(`Searching for "${parsed.value}"`);
-          return;
-        }
-      } else {
-        // Fallback: search in Google in new tab
-        window.open(`https://www.google.com/search?q=${encodeURIComponent(parsed.value)}`, "_blank");
-        this.finishCommand(`Searching Google for "${parsed.value}"`);
-        return;
-      }
-    }
-
-    // 11. Form Input Typing & Clearing
-    if (parsed.intent === "TYPE" || parsed.intent === "CLEAR") {
-      const targetQuery = parsed.target || "input";
-      const matches = this.analyzer.findMatchingElements(targetQuery, "input");
-
-      if (matches.length > 0) {
-        const best = matches[0].element;
-        const domEl = this.discovery.getElementById(best.id);
-        if (domEl) {
-          if (parsed.intent === "CLEAR") {
-            this.actionEngine.clearElement(domEl);
-            this.finishCommand(`Cleared ${best.text || "field"}`);
-          } else {
-            this.actionEngine.typeIntoElement(domEl, parsed.value || "");
-            this.finishCommand(`Entered text into ${best.placeholder || best.text || "field"}`);
-          }
-          return;
-        }
-      }
-    }
-
-    // 12. Form Submission
-    if (parsed.intent === "SUBMIT") {
-      const step: ActionStep = { type: "SUBMIT", description: "Submit form" };
-      if (this.settings.requireHighImpactConfirmation && ActionValidator.isHighImpactAction(step)) {
-        this.pendingConfirmationStep = step;
-        const prompt = "VoxNav is ready to submit this form. Say 'Confirm' to continue.";
-        tts.speak(prompt);
-        this.overlay.updateStatus("ambiguous", "Say 'Confirm' to proceed");
-        return;
-      } else {
-        this.actionEngine.submitForm();
-        this.finishCommand("Form submitted");
-        return;
-      }
-    }
-
-    // 13. Element Clicking & Target Resolution
-    if (parsed.intent === "CLICK" || parsed.intent === "OPEN_LINK" || parsed.target) {
-      const targetQuery = parsed.target || parsed.raw;
-      const matches = this.analyzer.findMatchingElements(targetQuery, parsed.targetType);
-
-      if (matches.length === 1 || (matches.length > 1 && matches[0].score - matches[1].score > 0.25)) {
-        const best = matches[0].element;
-        const domEl = this.discovery.getElementById(best.id);
-
-        if (domEl) {
-          const step: ActionStep = {
-            type: "CLICK",
-            targetId: best.id,
-            description: `Click ${best.text || "target"}`
-          };
-
-          // High-impact safety confirmation check
-          if (this.settings.requireHighImpactConfirmation && ActionValidator.isHighImpactAction(step, best.text)) {
-            this.pendingConfirmationStep = step;
-            const prompt = `VoxNav is ready to ${best.text}. Say 'Confirm' to proceed.`;
-            tts.speak(prompt);
-            this.overlay.updateStatus("ambiguous", "Say 'Confirm' to proceed");
+      // 5. Direct Number Target Selection
+      if (parsed.intent === "CLICK_NUMBER" && parsed.targetNumber !== undefined) {
+        const matchedSemantic = this.labeler.getElementByNumber(parsed.targetNumber);
+        if (matchedSemantic) {
+          const targetEl = this.discovery.getElementById(matchedSemantic.id);
+          if (targetEl) {
+            this.labeler.highlightBadge(parsed.targetNumber);
+            this.overlay.updateStatus("executing", `Item ${parsed.targetNumber}`);
+            this.actionEngine.clickElement(targetEl);
+            this.finishCommand(`Clicked #${parsed.targetNumber}`);
             return;
           }
-
-          this.overlay.updateStatus("executing", `Clicking ${best.text || "button"}`);
-          this.actionEngine.clickElement(domEl);
-          this.finishCommand(`Clicked "${best.text || "element"}"`);
+        } else {
+          this.finishCommand(`Badge #${parsed.targetNumber} not found.`);
           return;
         }
-      } else if (matches.length > 1) {
-        // Disambiguation Flow: Show top candidates
-        this.pendingCandidates = matches.slice(0, 4).map((m) => m.element);
-        this.labeler.show(this.pendingCandidates);
-
-        const prompt = `I found ${this.pendingCandidates.length} matching items. Say 1, 2, or 3.`;
-        tts.speak(prompt);
-        this.overlay.updateStatus("ambiguous", `Say 1 to ${this.pendingCandidates.length}`);
-        return;
       }
-    }
 
-    // 14. Fallback to AI Planner for Complex Commands
-    if (this.settings.aiAssistance && this.settings.aiProvider !== "offline") {
-      this.overlay.updateStatus("understanding", "Consulting AI model");
-      const compact = this.analyzer.getCompactRepresentation(30);
-      const aiPlan = await this.aiPlanner.planWithAI(parsed, compact, document.title);
-
-      if (aiPlan && aiPlan.actions.length > 0) {
-        for (const action of aiPlan.actions) {
-          this.actionEngine.executeStep(action);
+      // 6. Browser Tab Controls
+      if (["NEW_TAB", "CLOSE_TAB", "NEXT_TAB", "PREVIOUS_TAB"].includes(parsed.intent)) {
+        if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
+          chrome.runtime.sendMessage({ type: "VOXNAV_TAB_ACTION", action: parsed.intent });
+          this.finishCommand(`Tab: ${parsed.intent.toLowerCase().replace("_", " ")}`);
+          return;
         }
-        this.finishCommand(aiPlan.feedbackMessage || "AI action plan executed");
+      }
+
+      // 7. Reading & Describing Accessibility
+      if (parsed.intent === "READ_PAGE" || parsed.intent === "DESCRIBE_PAGE") {
+        const outline = this.analyzer.getSpokenPageOutline();
+        this.finishCommand(outline);
         return;
       }
-    }
 
-    // 15. Unresolved Target
-    this.finishCommand(`I couldn't find a matching element for "${rawUtterance}" on this page.`);
+      // 8. Scrolling Navigation
+      if (["SCROLL_DOWN", "SCROLL_UP", "SCROLL_TOP", "SCROLL_BOTTOM", "PAGE_DOWN", "PAGE_UP"].includes(parsed.intent)) {
+        this.actionEngine.executeStep({
+          type: parsed.intent,
+          description: `Scroll ${parsed.direction || "page"}`
+        });
+        this.finishCommand(`Scrolled ${parsed.direction?.toLowerCase() || "page"}`);
+        return;
+      }
+
+      // 9. Standard Browser History Navigation
+      if (["BACK", "FORWARD", "REFRESH", "HOME"].includes(parsed.intent)) {
+        this.actionEngine.executeStep({
+          type: parsed.intent,
+          description: `Navigate ${parsed.intent}`
+        });
+        this.finishCommand(`Navigating: ${parsed.intent.toLowerCase()}`);
+        return;
+      }
+
+      // 10. Search Queries
+      if (parsed.intent === "SEARCH" && parsed.value) {
+        const searchBox = this.analyzer.findPrimarySearchInput();
+        if (searchBox) {
+          const el = this.discovery.getElementById(searchBox.id);
+          if (el) {
+            this.actionEngine.typeIntoElement(el, parsed.value);
+            const form = el.closest("form");
+            if (form) {
+              form.requestSubmit();
+            } else {
+              el.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", code: "Enter", bubbles: true }));
+            }
+            this.finishCommand(`Searching: "${parsed.value}"`);
+            return;
+          }
+        } else {
+          window.open(`https://www.google.com/search?q=${encodeURIComponent(parsed.value)}`, "_blank");
+          this.finishCommand(`Searching: "${parsed.value}"`);
+          return;
+        }
+      }
+
+      // 11. Form Input Typing & Clearing
+      if (parsed.intent === "TYPE" || parsed.intent === "CLEAR") {
+        const targetQuery = parsed.target || "input";
+        const matches = this.analyzer.findMatchingElements(targetQuery, "input");
+
+        if (matches.length > 0) {
+          const best = matches[0].element;
+          const domEl = this.discovery.getElementById(best.id);
+          if (domEl) {
+            if (parsed.intent === "CLEAR") {
+              this.actionEngine.clearElement(domEl);
+              this.finishCommand(`Cleared ${best.text || "input"}`);
+            } else {
+              this.actionEngine.typeIntoElement(domEl, parsed.value || "");
+              this.finishCommand(`Entered "${parsed.value}"`);
+            }
+            return;
+          }
+        }
+      }
+
+      // 12. Form Submission
+      if (parsed.intent === "SUBMIT") {
+        const step: ActionStep = { type: "SUBMIT", description: "Submit form" };
+        if (this.settings.requireHighImpactConfirmation && ActionValidator.isHighImpactAction(step)) {
+          this.pendingConfirmationStep = step;
+          const prompt = "Ready to submit. Say 'Confirm' to proceed.";
+          this.overlay.updateStatus("ambiguous", "Say 'Confirm'");
+          tts.speak(prompt);
+          return;
+        } else {
+          this.actionEngine.submitForm();
+          this.finishCommand("Form submitted");
+          return;
+        }
+      }
+
+      // 13. Element Clicking & Target Resolution
+      if (parsed.intent === "CLICK" || parsed.intent === "OPEN_LINK" || parsed.target) {
+        const targetQuery = parsed.target || parsed.raw;
+        const matches = this.analyzer.findMatchingElements(targetQuery, parsed.targetType);
+
+        if (matches.length === 1 || (matches.length > 1 && matches[0].score - matches[1].score > 0.22)) {
+          const best = matches[0].element;
+          const domEl = this.discovery.getElementById(best.id);
+
+          if (domEl) {
+            const step: ActionStep = {
+              type: "CLICK",
+              targetId: best.id,
+              description: `Click ${best.text || "target"}`
+            };
+
+            // High-impact safety check
+            if (this.settings.requireHighImpactConfirmation && ActionValidator.isHighImpactAction(step, best.text)) {
+              this.pendingConfirmationStep = step;
+              const prompt = `Ready to ${best.text}. Say 'Confirm' to proceed.`;
+              this.overlay.updateStatus("ambiguous", "Say 'Confirm'");
+              tts.speak(prompt);
+              return;
+            }
+
+            this.overlay.updateStatus("executing", `Clicking ${best.text.slice(0, 15) || "button"}`);
+            this.actionEngine.clickElement(domEl);
+            this.finishCommand(`Clicked "${best.text.slice(0, 20) || "element"}"`);
+            return;
+          }
+        } else if (matches.length > 1) {
+          // Disambiguation
+          this.pendingCandidates = matches.slice(0, 3).map((m) => m.element);
+          this.labeler.show(this.pendingCandidates);
+          this.overlay.updateStatus("ambiguous", `Say 1 to ${this.pendingCandidates.length}`);
+          tts.speak(`Found ${this.pendingCandidates.length} matches. Say 1, 2, or 3.`);
+          return;
+        }
+      }
+
+      // 14. Fallback to AI Planner
+      if (this.settings.aiAssistance && this.settings.aiProvider !== "offline") {
+        this.overlay.updateStatus("understanding", "AI planning");
+        const compact = this.analyzer.getCompactRepresentation(25);
+        const aiPlan = await this.aiPlanner.planWithAI(parsed, compact, document.title);
+
+        if (aiPlan && aiPlan.actions.length > 0) {
+          for (const action of aiPlan.actions) {
+            this.actionEngine.executeStep(action);
+          }
+          this.finishCommand(aiPlan.feedbackMessage || "Action executed");
+          return;
+        }
+      }
+
+      // 15. Unresolved Target
+      this.finishCommand(`No match found for "${cleanInput.slice(0, 24)}"`);
+    } finally {
+      this.isProcessingCommand = false;
+    }
   }
 
   private finishCommand(feedback: string): void {
     this.lastResultText = feedback;
     this.overlay.updateStatus("done", feedback);
-    tts.speak(feedback);
+
+    if (this.settings.voiceFeedback) {
+      tts.speak(feedback);
+    }
   }
 
   /**
@@ -465,32 +490,29 @@ export class VoxNavContentApp {
    */
   public async startInteractiveDemo(): Promise<void> {
     this.overlay.show();
-    this.overlay.updateStatus("understanding", "Starting VoxNav Demo");
-    tts.speak("Welcome to VoxNav. Starting interactive demonstration.");
+    this.overlay.updateStatus("understanding", "Starting Demo");
+    tts.speak("Welcome to VoxNav demonstration.");
 
-    await new Promise((r) => setTimeout(r, 1800));
+    await new Promise((r) => setTimeout(r, 1600));
 
     // Step 1: Element Analysis & Numbered Overlay
-    this.overlay.updateStatus("executing", "Step 1: Discovering elements");
+    this.overlay.updateStatus("executing", "Step 1: Numbering elements");
     const elements = this.analyzer.refresh();
     this.labeler.show(elements);
-    tts.speak(`Detected ${elements.length} interactive elements. Numbering targets.`);
-
-    await new Promise((r) => setTimeout(r, 2200));
-
-    // Step 2: Simulated Spoken Command
-    this.overlay.setTranscript("Scroll down a little");
-    this.overlay.updateStatus("executing", "Step 2: Voice command executed");
-    this.actionEngine.scroll("DOWN", "SMALL");
-    tts.speak("Scrolling page down.");
 
     await new Promise((r) => setTimeout(r, 2000));
 
+    // Step 2: Simulated Spoken Command
+    this.overlay.setTranscript("Scroll down a little");
+    this.overlay.updateStatus("executing", "Step 2: Scrolling");
+    this.actionEngine.scroll("DOWN", "SMALL");
+
+    await new Promise((r) => setTimeout(r, 1800));
+
     // Step 3: Highlight Target & Action
-    this.overlay.setTranscript("Highlighting primary navigation");
+    this.overlay.setTranscript("Highlighting primary target");
     this.labeler.highlightBadge(1);
-    this.overlay.updateStatus("done", "Demo complete! Speak any command.");
-    tts.speak("VoxNav is ready. Speak, navigate, control the web.");
+    this.overlay.updateStatus("done", "Ready! Speak any command.");
   }
 }
 

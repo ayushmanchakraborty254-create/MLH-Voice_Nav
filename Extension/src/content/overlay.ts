@@ -68,18 +68,18 @@ export class FloatingOverlay {
         pointer-events: auto;
         display: flex;
         flex-direction: column;
-        background: rgba(15, 23, 42, 0.94);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        border-radius: 16px;
-        padding: 12px 16px;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 14px;
+        padding: 12px 14px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.45), 0 8px 10px -6px rgba(0, 0, 0, 0.25);
         color: #F8FAFC;
-        min-width: 320px;
-        max-width: 440px;
-        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        width: 350px;
+        max-width: calc(100vw - 32px);
         user-select: none;
+        transition: opacity 0.2s ease, box-shadow 0.2s ease;
       }
 
       .header-row {
@@ -114,14 +114,18 @@ export class FloatingOverlay {
       .status-pill {
         font-size: 11px;
         font-weight: 600;
-        padding: 3px 8px;
+        padding: 2px 8px;
+        height: 22px;
         border-radius: 20px;
         background: rgba(255, 255, 255, 0.1);
         color: #94A3B8;
-        display: flex;
+        display: inline-flex;
         align-items: center;
         gap: 4px;
-        transition: all 0.2s ease;
+        max-width: 170px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .status-pill.listening {
@@ -159,16 +163,16 @@ export class FloatingOverlay {
         background: #2563EB;
         color: #FFFFFF;
         border: none;
-        border-radius: 10px;
-        padding: 8px 14px;
+        border-radius: 8px;
+        padding: 7px 12px;
         font-size: 12px;
         font-weight: 700;
         cursor: pointer;
         display: flex;
         align-items: center;
-        gap: 6px;
-        transition: all 0.2s ease;
+        gap: 5px;
         flex-shrink: 0;
+        transition: background 0.15s ease;
       }
 
       .mic-btn:hover {
@@ -177,13 +181,13 @@ export class FloatingOverlay {
 
       .mic-btn.active {
         background: #DC2626;
-        box-shadow: 0 0 14px rgba(220, 38, 38, 0.6);
-        animation: pulse 1.5s infinite;
+        box-shadow: 0 0 12px rgba(220, 38, 38, 0.6);
+        animation: pulse 1.6s infinite ease-in-out;
       }
 
       @keyframes pulse {
         0%, 100% { opacity: 1; }
-        50% { opacity: 0.85; }
+        50% { opacity: 0.8; }
       }
 
       .command-form {
@@ -193,7 +197,7 @@ export class FloatingOverlay {
       }
 
       .command-input {
-        flex: 1;
+        width: 100%;
         background: rgba(255, 255, 255, 0.08);
         border: 1px solid rgba(255, 255, 255, 0.16);
         border-radius: 8px;
@@ -201,7 +205,6 @@ export class FloatingOverlay {
         color: #FFFFFF;
         font-size: 12px;
         outline: none;
-        transition: border-color 0.2s;
       }
 
       .command-input::placeholder {
@@ -217,12 +220,11 @@ export class FloatingOverlay {
         background: rgba(255, 255, 255, 0.08);
         color: #94A3B8;
         border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 8px;
-        padding: 6px 10px;
+        border-radius: 6px;
+        padding: 4px 8px;
         font-size: 11px;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.15s;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -241,21 +243,25 @@ export class FloatingOverlay {
 
       .transcript-box {
         margin-top: 8px;
-        background: rgba(0, 0, 0, 0.3);
-        border-radius: 8px;
-        padding: 6px 10px;
+        background: rgba(0, 0, 0, 0.35);
+        border-radius: 6px;
+        padding: 5px 8px;
         font-size: 12px;
         color: #CBD5E1;
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        min-height: 28px;
-        word-break: break-word;
+        min-height: 24px;
+        max-height: 48px;
+        overflow: hidden;
       }
 
       .transcript-text {
         font-style: italic;
         color: #93C5FD;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        width: 100%;
       }
 
       .close-btn {
@@ -264,7 +270,7 @@ export class FloatingOverlay {
         color: #64748B;
         font-size: 14px;
         cursor: pointer;
-        padding: 2px 6px;
+        padding: 2px 4px;
         border-radius: 4px;
       }
 
@@ -391,12 +397,12 @@ export class FloatingOverlay {
         if (micTextEl) micTextEl.textContent = "Stop";
         break;
       case "understanding":
-        this.statusBadge.textContent = "◌ Understanding...";
+        this.statusBadge.textContent = "◌ Processing";
         this.micButton.classList.remove("active");
         if (micTextEl) micTextEl.textContent = "Speak";
         break;
       case "executing":
-        this.statusBadge.textContent = `→ ${detailText || "Executing"}`;
+        this.statusBadge.textContent = `→ ${detailText || "Running"}`;
         break;
       case "done":
         this.statusBadge.textContent = `✓ ${detailText || "Done"}`;
@@ -404,7 +410,7 @@ export class FloatingOverlay {
         if (micTextEl) micTextEl.textContent = "Speak";
         break;
       case "ambiguous":
-        this.statusBadge.textContent = `⚠ ${detailText || "Which one?"}`;
+        this.statusBadge.textContent = `⚠ ${detailText || "Choose"}`;
         break;
       case "error":
         this.statusBadge.textContent = `✕ ${detailText || "Error"}`;

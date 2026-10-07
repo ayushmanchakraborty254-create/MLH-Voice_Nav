@@ -1,7 +1,9 @@
 /**
  * VoxNav - Speech Recognition Engine
- * Modular abstraction layer supporting Web Speech API with pluggable adapter for Whisper or remote STT.
+ * Modular abstraction layer supporting Web Speech API with smooth restart handling and echo filtering.
  */
+
+import { tts } from "./text-to-speech";
 
 export interface SpeechEngineCallbacks {
   onTranscript: (transcript: string, isFinal: boolean) => void;
@@ -23,6 +25,7 @@ export class WebSpeechEngine implements ISpeechEngine {
   private currentLanguage: string = "en-US";
   private callbacks: SpeechEngineCallbacks;
   private shouldRestart: boolean = false;
+  private restartTimer: any = null;
 
   constructor(callbacks: SpeechEngineCallbacks) {
     this.callbacks = callbacks;
@@ -54,6 +57,11 @@ export class WebSpeechEngine implements ISpeechEngine {
       };
 
       this.recognition.onresult = (event: any) => {
+        // Echo filter: ignore microphone input if TTS audio is currently speaking
+        if (tts.isCurrentlySpeaking()) {
+          return;
+        }
+
         let interimTranscript = "";
         let finalTranscript = "";
 
@@ -76,42 +84,63 @@ export class WebSpeechEngine implements ISpeechEngine {
 
       this.recognition.onerror = (event: any) => {
         const error = event.error;
-        let humanMessage = "Speech recognition error occurred.";
 
+        if (error === "no-speech") {
+          // Normal silence timeout in Chrome, continue listening seamlessly
+          return;
+        }
+
+        if (error === "aborted") {
+          return;
+        }
+
+        let humanMessage = "Speech recognition error occurred.";
         switch (error) {
           case "not-allowed":
-            humanMessage = "Microphone access was denied. Please allow microphone permissions in Chrome.";
+            humanMessage = "Microphone access blocked. Click the lock icon in the address bar to allow microphone.";
             this.shouldRestart = false;
             break;
-          case "no-speech":
-            // Normal timeout when quiet, keep listening if active
-            return;
           case "audio-capture":
-            humanMessage = "No microphone was found or microphone is busy.";
+            humanMessage = "Microphone unavailable or in use by another application.";
             this.shouldRestart = false;
             break;
           case "network":
-            humanMessage = "Speech recognition network connection dropped.";
+            humanMessage = "Speech network connection dropped.";
             break;
           default:
-            humanMessage = `Speech error: ${error}`;
+            humanMessage = `Speech recognition error: ${error}`;
         }
 
-        this.callbacks.onError(humanMessage, error);
+        if (!this.shouldRestart) {
+          this.callbacks.onListeningStateChange(false);
+          this.callbacks.onError(humanMessage, error);
+        }
       };
 
       this.recognition.onend = () => {
-        this.isListening = false;
-        this.callbacks.onListeningStateChange(false);
-
-        // Auto-restart if user still wants voice mode active
-        if (this.shouldRestart) {
-          try {
-            this.recognition.start();
-          } catch (e) {
-            // Already started or terminated
-          }
+        // Only notify UI of idle state if user deliberately stopped or error occurred
+        if (!this.shouldRestart) {
+          this.isListening = false;
+          this.callbacks.onListeningStateChange(false);
+          return;
         }
+
+        // Seamless auto-reconnect without flickering the UI
+        clearTimeout(this.restartTimer);
+        this.restartTimer = setTimeout(() => {
+          if (this.shouldRestart) {
+            try {
+              this.recognition.start();
+            } catch (e) {
+              // Device busy or already started; retry with backoff
+              setTimeout(() => {
+                if (this.shouldRestart) {
+                  try { this.recognition.start(); } catch (err) {}
+                }
+              }, 400);
+            }
+          }
+        }, 150);
       };
     } catch (e) {
       console.error("[VoxNav Speech] Error initializing recognition:", e);
@@ -131,19 +160,24 @@ export class WebSpeechEngine implements ISpeechEngine {
       return;
     }
 
+    this.shouldRestart = true;
+    clearTimeout(this.restartTimer);
+
     if (this.isListening) return;
 
-    this.shouldRestart = true;
     try {
       this.recognition.start();
     } catch (e) {
-      console.warn("[VoxNav Speech] Recognition start error:", e);
+      // If already started, ensure state is flagged
+      this.isListening = true;
+      this.callbacks.onListeningStateChange(true);
     }
   }
 
   public stop(): void {
     this.shouldRestart = false;
-    if (this.recognition && this.isListening) {
+    clearTimeout(this.restartTimer);
+    if (this.recognition) {
       try {
         this.recognition.stop();
       } catch (e) {
@@ -156,6 +190,7 @@ export class WebSpeechEngine implements ISpeechEngine {
 
   public abort(): void {
     this.shouldRestart = false;
+    clearTimeout(this.restartTimer);
     if (this.recognition) {
       try {
         this.recognition.abort();

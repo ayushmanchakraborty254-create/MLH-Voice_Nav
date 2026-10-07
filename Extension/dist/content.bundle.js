@@ -1049,18 +1049,18 @@
         pointer-events: auto;
         display: flex;
         flex-direction: column;
-        background: rgba(15, 23, 42, 0.94);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        border-radius: 16px;
-        padding: 12px 16px;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 14px;
+        padding: 12px 14px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.45), 0 8px 10px -6px rgba(0, 0, 0, 0.25);
         color: #F8FAFC;
-        min-width: 320px;
-        max-width: 440px;
-        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        width: 350px;
+        max-width: calc(100vw - 32px);
         user-select: none;
+        transition: opacity 0.2s ease, box-shadow 0.2s ease;
       }
 
       .header-row {
@@ -1095,14 +1095,18 @@
       .status-pill {
         font-size: 11px;
         font-weight: 600;
-        padding: 3px 8px;
+        padding: 2px 8px;
+        height: 22px;
         border-radius: 20px;
         background: rgba(255, 255, 255, 0.1);
         color: #94A3B8;
-        display: flex;
+        display: inline-flex;
         align-items: center;
         gap: 4px;
-        transition: all 0.2s ease;
+        max-width: 170px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .status-pill.listening {
@@ -1140,16 +1144,16 @@
         background: #2563EB;
         color: #FFFFFF;
         border: none;
-        border-radius: 10px;
-        padding: 8px 14px;
+        border-radius: 8px;
+        padding: 7px 12px;
         font-size: 12px;
         font-weight: 700;
         cursor: pointer;
         display: flex;
         align-items: center;
-        gap: 6px;
-        transition: all 0.2s ease;
+        gap: 5px;
         flex-shrink: 0;
+        transition: background 0.15s ease;
       }
 
       .mic-btn:hover {
@@ -1158,13 +1162,13 @@
 
       .mic-btn.active {
         background: #DC2626;
-        box-shadow: 0 0 14px rgba(220, 38, 38, 0.6);
-        animation: pulse 1.5s infinite;
+        box-shadow: 0 0 12px rgba(220, 38, 38, 0.6);
+        animation: pulse 1.6s infinite ease-in-out;
       }
 
       @keyframes pulse {
         0%, 100% { opacity: 1; }
-        50% { opacity: 0.85; }
+        50% { opacity: 0.8; }
       }
 
       .command-form {
@@ -1174,7 +1178,7 @@
       }
 
       .command-input {
-        flex: 1;
+        width: 100%;
         background: rgba(255, 255, 255, 0.08);
         border: 1px solid rgba(255, 255, 255, 0.16);
         border-radius: 8px;
@@ -1182,7 +1186,6 @@
         color: #FFFFFF;
         font-size: 12px;
         outline: none;
-        transition: border-color 0.2s;
       }
 
       .command-input::placeholder {
@@ -1198,12 +1201,11 @@
         background: rgba(255, 255, 255, 0.08);
         color: #94A3B8;
         border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 8px;
-        padding: 6px 10px;
+        border-radius: 6px;
+        padding: 4px 8px;
         font-size: 11px;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.15s;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1222,21 +1224,25 @@
 
       .transcript-box {
         margin-top: 8px;
-        background: rgba(0, 0, 0, 0.3);
-        border-radius: 8px;
-        padding: 6px 10px;
+        background: rgba(0, 0, 0, 0.35);
+        border-radius: 6px;
+        padding: 5px 8px;
         font-size: 12px;
         color: #CBD5E1;
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        min-height: 28px;
-        word-break: break-word;
+        min-height: 24px;
+        max-height: 48px;
+        overflow: hidden;
       }
 
       .transcript-text {
         font-style: italic;
         color: #93C5FD;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        width: 100%;
       }
 
       .close-btn {
@@ -1245,7 +1251,7 @@
         color: #64748B;
         font-size: 14px;
         cursor: pointer;
-        padding: 2px 6px;
+        padding: 2px 4px;
         border-radius: 4px;
       }
 
@@ -1355,12 +1361,12 @@
           if (micTextEl) micTextEl.textContent = "Stop";
           break;
         case "understanding":
-          this.statusBadge.textContent = "\u25CC Understanding...";
+          this.statusBadge.textContent = "\u25CC Processing";
           this.micButton.classList.remove("active");
           if (micTextEl) micTextEl.textContent = "Speak";
           break;
         case "executing":
-          this.statusBadge.textContent = `\u2192 ${detailText || "Executing"}`;
+          this.statusBadge.textContent = `\u2192 ${detailText || "Running"}`;
           break;
         case "done":
           this.statusBadge.textContent = `\u2713 ${detailText || "Done"}`;
@@ -1368,7 +1374,7 @@
           if (micTextEl) micTextEl.textContent = "Speak";
           break;
         case "ambiguous":
-          this.statusBadge.textContent = `\u26A0 ${detailText || "Which one?"}`;
+          this.statusBadge.textContent = `\u26A0 ${detailText || "Choose"}`;
           break;
         case "error":
           this.statusBadge.textContent = `\u2715 ${detailText || "Error"}`;
@@ -1421,6 +1427,88 @@
     }
   };
 
+  // src/voice/text-to-speech.ts
+  var TextToSpeechEngine = class {
+    enabled = true;
+    rate = 1;
+    pitch = 1;
+    preferredLang = "en-US";
+    synth = null;
+    isSpeaking = false;
+    lastSpokenTimestamp = 0;
+    constructor() {
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        this.synth = window.speechSynthesis;
+      }
+    }
+    setConfig(enabled, rate = 1, pitch = 1, lang = "en-US") {
+      this.enabled = enabled;
+      this.rate = Math.max(0.7, Math.min(rate, 1.6));
+      this.pitch = Math.max(0.8, Math.min(pitch, 1.4));
+      this.preferredLang = lang;
+    }
+    /**
+     * Returns true while TTS is playing or within the 650ms reverberation window.
+     * This is critical to prevent the microphone from picking up its own voice.
+     */
+    isCurrentlySpeaking() {
+      if (this.isSpeaking) return true;
+      if (this.synth && this.synth.speaking) return true;
+      if (Date.now() - this.lastSpokenTimestamp < 650) return true;
+      return false;
+    }
+    speak(text, onEnd) {
+      if (!this.enabled || !text) {
+        if (onEnd) onEnd();
+        return;
+      }
+      if (!this.synth) {
+        if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
+          chrome.runtime.sendMessage({ type: "VOXNAV_SPEAK", text });
+        }
+        if (onEnd) onEnd();
+        return;
+      }
+      try {
+        this.synth.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = this.rate;
+        utterance.pitch = this.pitch;
+        utterance.lang = this.preferredLang;
+        const voices = this.synth.getVoices();
+        const matchingVoice = voices.find((v) => v.lang.startsWith(this.preferredLang.slice(0, 2)));
+        if (matchingVoice) {
+          utterance.voice = matchingVoice;
+        }
+        this.isSpeaking = true;
+        const finish = () => {
+          this.isSpeaking = false;
+          this.lastSpokenTimestamp = Date.now();
+          if (onEnd) onEnd();
+        };
+        utterance.onend = finish;
+        utterance.onerror = (e) => {
+          console.warn("[VoxNav TTS] Speech error:", e);
+          finish();
+        };
+        this.synth.speak(utterance);
+      } catch (err) {
+        console.warn("[VoxNav TTS] Exception during speech synthesis:", err);
+        this.isSpeaking = false;
+        this.lastSpokenTimestamp = Date.now();
+        if (onEnd) onEnd();
+      }
+    }
+    stop() {
+      if (this.synth) {
+        this.synth.cancel();
+      }
+      this.isSpeaking = false;
+      this.lastSpokenTimestamp = Date.now();
+    }
+  };
+  var tts = new TextToSpeechEngine();
+
   // src/voice/speech-recognition.ts
   var WebSpeechEngine = class {
     recognition = null;
@@ -1428,6 +1516,7 @@
     currentLanguage = "en-US";
     callbacks;
     shouldRestart = false;
+    restartTimer = null;
     constructor(callbacks) {
       this.callbacks = callbacks;
       this.initRecognition();
@@ -1450,6 +1539,9 @@
           this.callbacks.onListeningStateChange(true);
         };
         this.recognition.onresult = (event) => {
+          if (tts.isCurrentlySpeaking()) {
+            return;
+          }
           let interimTranscript = "";
           let finalTranscript = "";
           for (let i = event.resultIndex; i < event.results.length; ++i) {
@@ -1469,35 +1561,56 @@
         };
         this.recognition.onerror = (event) => {
           const error = event.error;
+          if (error === "no-speech") {
+            return;
+          }
+          if (error === "aborted") {
+            return;
+          }
           let humanMessage = "Speech recognition error occurred.";
           switch (error) {
             case "not-allowed":
-              humanMessage = "Microphone access was denied. Please allow microphone permissions in Chrome.";
+              humanMessage = "Microphone access blocked. Click the lock icon in the address bar to allow microphone.";
               this.shouldRestart = false;
               break;
-            case "no-speech":
-              return;
             case "audio-capture":
-              humanMessage = "No microphone was found or microphone is busy.";
+              humanMessage = "Microphone unavailable or in use by another application.";
               this.shouldRestart = false;
               break;
             case "network":
-              humanMessage = "Speech recognition network connection dropped.";
+              humanMessage = "Speech network connection dropped.";
               break;
             default:
-              humanMessage = `Speech error: ${error}`;
+              humanMessage = `Speech recognition error: ${error}`;
           }
-          this.callbacks.onError(humanMessage, error);
+          if (!this.shouldRestart) {
+            this.callbacks.onListeningStateChange(false);
+            this.callbacks.onError(humanMessage, error);
+          }
         };
         this.recognition.onend = () => {
-          this.isListening = false;
-          this.callbacks.onListeningStateChange(false);
-          if (this.shouldRestart) {
-            try {
-              this.recognition.start();
-            } catch (e) {
-            }
+          if (!this.shouldRestart) {
+            this.isListening = false;
+            this.callbacks.onListeningStateChange(false);
+            return;
           }
+          clearTimeout(this.restartTimer);
+          this.restartTimer = setTimeout(() => {
+            if (this.shouldRestart) {
+              try {
+                this.recognition.start();
+              } catch (e) {
+                setTimeout(() => {
+                  if (this.shouldRestart) {
+                    try {
+                      this.recognition.start();
+                    } catch (err) {
+                    }
+                  }
+                }, 400);
+              }
+            }
+          }, 150);
         };
       } catch (e) {
         console.error("[VoxNav Speech] Error initializing recognition:", e);
@@ -1514,17 +1627,20 @@
         this.callbacks.onError("Speech recognition API is unavailable in this tab.");
         return;
       }
-      if (this.isListening) return;
       this.shouldRestart = true;
+      clearTimeout(this.restartTimer);
+      if (this.isListening) return;
       try {
         this.recognition.start();
       } catch (e) {
-        console.warn("[VoxNav Speech] Recognition start error:", e);
+        this.isListening = true;
+        this.callbacks.onListeningStateChange(true);
       }
     }
     stop() {
       this.shouldRestart = false;
-      if (this.recognition && this.isListening) {
+      clearTimeout(this.restartTimer);
+      if (this.recognition) {
         try {
           this.recognition.stop();
         } catch (e) {
@@ -1535,6 +1651,7 @@
     }
     abort() {
       this.shouldRestart = false;
+      clearTimeout(this.restartTimer);
       if (this.recognition) {
         try {
           this.recognition.abort();
@@ -1861,68 +1978,6 @@
     }
   };
 
-  // src/voice/text-to-speech.ts
-  var TextToSpeechEngine = class {
-    enabled = true;
-    rate = 1;
-    pitch = 1;
-    preferredLang = "en-US";
-    synth = null;
-    constructor() {
-      if (typeof window !== "undefined" && "speechSynthesis" in window) {
-        this.synth = window.speechSynthesis;
-      }
-    }
-    setConfig(enabled, rate = 1, pitch = 1, lang = "en-US") {
-      this.enabled = enabled;
-      this.rate = Math.max(0.7, Math.min(rate, 1.6));
-      this.pitch = Math.max(0.8, Math.min(pitch, 1.4));
-      this.preferredLang = lang;
-    }
-    speak(text, onEnd) {
-      if (!this.enabled || !text) {
-        if (onEnd) onEnd();
-        return;
-      }
-      if (!this.synth) {
-        if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
-          chrome.runtime.sendMessage({ type: "VOXNAV_SPEAK", text });
-        }
-        if (onEnd) onEnd();
-        return;
-      }
-      try {
-        this.synth.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = this.rate;
-        utterance.pitch = this.pitch;
-        utterance.lang = this.preferredLang;
-        const voices = this.synth.getVoices();
-        const matchingVoice = voices.find((v) => v.lang.startsWith(this.preferredLang.slice(0, 2)));
-        if (matchingVoice) {
-          utterance.voice = matchingVoice;
-        }
-        utterance.onend = () => {
-          if (onEnd) onEnd();
-        };
-        utterance.onerror = (e) => {
-          console.warn("[VoxNav TTS] Speech error:", e);
-          if (onEnd) onEnd();
-        };
-        this.synth.speak(utterance);
-      } catch (err) {
-        console.warn("[VoxNav TTS] Exception during speech synthesis:", err);
-        if (onEnd) onEnd();
-      }
-    }
-    stop() {
-      if (this.synth) {
-        this.synth.cancel();
-      }
-    }
-  };
-  var tts = new TextToSpeechEngine();
-
   // src/ai/prompts.ts
   var SYSTEM_PLANNER_PROMPT = `You are VoxNav, an autonomous browser interaction agent.
 Your objective is to translate a user's natural language voice command into a safe, sequential list of browser actions on the current webpage.
@@ -2086,6 +2141,9 @@ Identify the best target element(s) to fulfill the user's command and return the
     speechEngine;
     aiPlanner;
     isListening = false;
+    isProcessingCommand = false;
+    lastExecutedCommand = "";
+    lastExecutedTimestamp = 0;
     pendingConfirmationStep = null;
     pendingCandidates = [];
     lastCommandText = "";
@@ -2196,13 +2254,12 @@ Identify the best target element(s) to fulfill the user's command and return the
     startListening() {
       this.overlay.show();
       this.overlay.updateStatus("listening");
-      this.speechEngine.start();
       this.isListening = true;
-      tts.speak("Listening");
+      this.speechEngine.start();
     }
     stopListening() {
-      this.speechEngine.stop();
       this.isListening = false;
+      this.speechEngine.stop();
       this.overlay.updateStatus("idle");
     }
     handleListeningStateChange(listening) {
@@ -2210,6 +2267,9 @@ Identify the best target element(s) to fulfill the user's command and return the
       this.overlay.updateStatus(listening ? "listening" : "idle");
     }
     handleSpeechTranscript(transcript, isFinal) {
+      if (tts.isCurrentlySpeaking()) {
+        return;
+      }
       this.overlay.setTranscript(transcript);
       if (isFinal) {
         this.handleCommand(transcript);
@@ -2217,253 +2277,261 @@ Identify the best target element(s) to fulfill the user's command and return the
     }
     handleSpeechError(errorMsg) {
       this.overlay.updateStatus("error", errorMsg);
-      tts.speak(errorMsg);
     }
     toggleNumberedMode() {
       const elements = this.analyzer.refresh();
       const isActive = this.labeler.toggle(elements);
       this.overlay.setNumbersActive(isActive);
       if (isActive) {
-        tts.speak("Numbered mode active. Say a number to click.");
         this.overlay.updateStatus("done", "Numbers visible");
       } else {
-        tts.speak("Numbered mode closed.");
         this.overlay.updateStatus("idle");
       }
       return isActive;
     }
     /**
-     * Main Command Execution Pipeline
+     * Main Command Execution Pipeline with deduplication and state safety.
      */
     async handleCommand(rawUtterance) {
       if (!rawUtterance || !rawUtterance.trim()) return;
-      this.lastCommandText = rawUtterance;
+      const cleanInput = rawUtterance.trim();
+      const now = Date.now();
+      if (cleanInput.toLowerCase() === this.lastExecutedCommand.toLowerCase() && now - this.lastExecutedTimestamp < 1400) {
+        return;
+      }
+      if (this.isProcessingCommand) {
+        return;
+      }
+      this.isProcessingCommand = true;
+      this.lastExecutedCommand = cleanInput;
+      this.lastExecutedTimestamp = now;
+      this.lastCommandText = cleanInput;
       this.overlay.updateStatus("understanding");
-      this.overlay.setTranscript(rawUtterance);
-      if (this.pendingConfirmationStep) {
-        if (/^(confirm|yes|proceed|sure|haan|thik ache)\b/i.test(rawUtterance)) {
-          const step = this.pendingConfirmationStep;
-          this.pendingConfirmationStep = null;
-          this.overlay.updateStatus("executing", step.description);
-          this.actionEngine.executeStep(step);
-          this.finishCommand(`Action confirmed and executed: ${step.description}`);
-          return;
-        } else {
-          this.pendingConfirmationStep = null;
-          this.finishCommand("Action cancelled.");
+      this.overlay.setTranscript(cleanInput);
+      try {
+        if (this.pendingConfirmationStep) {
+          if (/^(confirm|yes|proceed|sure|haan|thik ache)\b/i.test(cleanInput)) {
+            const step = this.pendingConfirmationStep;
+            this.pendingConfirmationStep = null;
+            this.overlay.updateStatus("executing", step.description);
+            this.actionEngine.executeStep(step);
+            this.finishCommand(`Confirmed: ${step.description}`);
+            return;
+          } else {
+            this.pendingConfirmationStep = null;
+            this.finishCommand("Action cancelled.");
+            return;
+          }
+        }
+        if (this.pendingCandidates.length > 0) {
+          const chosenNum = parseInt(cleanInput.replace(/\D/g, ""), 10);
+          if (chosenNum >= 1 && chosenNum <= this.pendingCandidates.length) {
+            const selected = this.pendingCandidates[chosenNum - 1];
+            this.pendingCandidates = [];
+            this.labeler.hide();
+            this.overlay.updateStatus("executing", `Item ${chosenNum}`);
+            const el = this.discovery.getElementById(selected.id);
+            if (el) {
+              this.actionEngine.clickElement(el);
+              this.finishCommand(`Clicked option ${chosenNum}`);
+            }
+            return;
+          }
+        }
+        const parsed = CommandParser.parse(cleanInput);
+        if (parsed.intent === "START_DEMO") {
+          await this.startInteractiveDemo();
           return;
         }
-      }
-      if (this.pendingCandidates.length > 0) {
-        const chosenNum = parseInt(rawUtterance.replace(/\D/g, ""), 10);
-        if (chosenNum >= 1 && chosenNum <= this.pendingCandidates.length) {
-          const selected = this.pendingCandidates[chosenNum - 1];
-          this.pendingCandidates = [];
+        if (parsed.intent === "HELP") {
+          const helpMsg = "Try: click login, open pricing, scroll down, show numbers, or search.";
+          this.finishCommand(helpMsg);
+          return;
+        }
+        if (parsed.intent === "SHOW_NUMBERS") {
+          this.labeler.show(this.analyzer.refresh());
+          this.overlay.setNumbersActive(true);
+          this.finishCommand("Numbers visible");
+          return;
+        }
+        if (parsed.intent === "HIDE_NUMBERS") {
           this.labeler.hide();
-          this.overlay.updateStatus("executing", `Clicking ${selected.text || "item"}`);
-          const el = this.discovery.getElementById(selected.id);
-          if (el) {
-            this.actionEngine.clickElement(el);
-            this.finishCommand(`Selected item ${chosenNum} clicked`);
-          }
+          this.overlay.setNumbersActive(false);
+          this.finishCommand("Numbers hidden");
           return;
         }
-      }
-      const parsed = CommandParser.parse(rawUtterance);
-      if (parsed.intent === "START_DEMO") {
-        this.startInteractiveDemo();
-        return;
-      }
-      if (parsed.intent === "HELP") {
-        const helpMsg = "You can say: click login, open pricing, scroll down, show numbers, search for topics, or read this page.";
-        tts.speak(helpMsg);
-        this.finishCommand(helpMsg);
-        return;
-      }
-      if (parsed.intent === "SHOW_NUMBERS") {
-        this.labeler.show(this.analyzer.refresh());
-        this.overlay.setNumbersActive(true);
-        this.finishCommand("Numbers displayed. Say a number to click.");
-        return;
-      }
-      if (parsed.intent === "HIDE_NUMBERS") {
-        this.labeler.hide();
-        this.overlay.setNumbersActive(false);
-        this.finishCommand("Numbers hidden.");
-        return;
-      }
-      if (parsed.intent === "CLICK_NUMBER" && parsed.targetNumber !== void 0) {
-        const matchedSemantic = this.labeler.getElementByNumber(parsed.targetNumber);
-        if (matchedSemantic) {
-          const targetEl = this.discovery.getElementById(matchedSemantic.id);
-          if (targetEl) {
-            this.labeler.highlightBadge(parsed.targetNumber);
-            this.overlay.updateStatus("executing", `Item ${parsed.targetNumber}`);
-            this.actionEngine.clickElement(targetEl);
-            this.finishCommand(`Clicked item ${parsed.targetNumber}`);
-            return;
-          }
-        } else {
-          this.finishCommand(`Item number ${parsed.targetNumber} not found on this screen.`);
-          return;
-        }
-      }
-      if (["NEW_TAB", "CLOSE_TAB", "NEXT_TAB", "PREVIOUS_TAB"].includes(parsed.intent)) {
-        if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
-          chrome.runtime.sendMessage({ type: "VOXNAV_TAB_ACTION", action: parsed.intent });
-          this.finishCommand(`Browser tab action: ${parsed.intent}`);
-          return;
-        }
-      }
-      if (parsed.intent === "READ_PAGE" || parsed.intent === "DESCRIBE_PAGE") {
-        const outline = this.analyzer.getSpokenPageOutline();
-        tts.speak(outline);
-        this.finishCommand("Page overview read.");
-        return;
-      }
-      if (["SCROLL_DOWN", "SCROLL_UP", "SCROLL_TOP", "SCROLL_BOTTOM", "PAGE_DOWN", "PAGE_UP"].includes(parsed.intent)) {
-        this.actionEngine.executeStep({
-          type: parsed.intent,
-          description: `Scroll ${parsed.direction || "page"}`
-        });
-        this.finishCommand(`Scrolled ${parsed.direction?.toLowerCase() || "page"}`);
-        return;
-      }
-      if (["BACK", "FORWARD", "REFRESH", "HOME"].includes(parsed.intent)) {
-        this.actionEngine.executeStep({
-          type: parsed.intent,
-          description: `Navigate ${parsed.intent}`
-        });
-        this.finishCommand(`Navigating: ${parsed.intent}`);
-        return;
-      }
-      if (parsed.intent === "SEARCH" && parsed.value) {
-        const searchBox = this.analyzer.findPrimarySearchInput();
-        if (searchBox) {
-          const el = this.discovery.getElementById(searchBox.id);
-          if (el) {
-            this.actionEngine.typeIntoElement(el, parsed.value);
-            const form = el.closest("form");
-            if (form) {
-              form.requestSubmit();
-            } else {
-              el.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", code: "Enter", bubbles: true }));
-            }
-            this.finishCommand(`Searching for "${parsed.value}"`);
-            return;
-          }
-        } else {
-          window.open(`https://www.google.com/search?q=${encodeURIComponent(parsed.value)}`, "_blank");
-          this.finishCommand(`Searching Google for "${parsed.value}"`);
-          return;
-        }
-      }
-      if (parsed.intent === "TYPE" || parsed.intent === "CLEAR") {
-        const targetQuery = parsed.target || "input";
-        const matches = this.analyzer.findMatchingElements(targetQuery, "input");
-        if (matches.length > 0) {
-          const best = matches[0].element;
-          const domEl = this.discovery.getElementById(best.id);
-          if (domEl) {
-            if (parsed.intent === "CLEAR") {
-              this.actionEngine.clearElement(domEl);
-              this.finishCommand(`Cleared ${best.text || "field"}`);
-            } else {
-              this.actionEngine.typeIntoElement(domEl, parsed.value || "");
-              this.finishCommand(`Entered text into ${best.placeholder || best.text || "field"}`);
-            }
-            return;
-          }
-        }
-      }
-      if (parsed.intent === "SUBMIT") {
-        const step = { type: "SUBMIT", description: "Submit form" };
-        if (this.settings.requireHighImpactConfirmation && ActionValidator.isHighImpactAction(step)) {
-          this.pendingConfirmationStep = step;
-          const prompt = "VoxNav is ready to submit this form. Say 'Confirm' to continue.";
-          tts.speak(prompt);
-          this.overlay.updateStatus("ambiguous", "Say 'Confirm' to proceed");
-          return;
-        } else {
-          this.actionEngine.submitForm();
-          this.finishCommand("Form submitted");
-          return;
-        }
-      }
-      if (parsed.intent === "CLICK" || parsed.intent === "OPEN_LINK" || parsed.target) {
-        const targetQuery = parsed.target || parsed.raw;
-        const matches = this.analyzer.findMatchingElements(targetQuery, parsed.targetType);
-        if (matches.length === 1 || matches.length > 1 && matches[0].score - matches[1].score > 0.25) {
-          const best = matches[0].element;
-          const domEl = this.discovery.getElementById(best.id);
-          if (domEl) {
-            const step = {
-              type: "CLICK",
-              targetId: best.id,
-              description: `Click ${best.text || "target"}`
-            };
-            if (this.settings.requireHighImpactConfirmation && ActionValidator.isHighImpactAction(step, best.text)) {
-              this.pendingConfirmationStep = step;
-              const prompt = `VoxNav is ready to ${best.text}. Say 'Confirm' to proceed.`;
-              tts.speak(prompt);
-              this.overlay.updateStatus("ambiguous", "Say 'Confirm' to proceed");
+        if (parsed.intent === "CLICK_NUMBER" && parsed.targetNumber !== void 0) {
+          const matchedSemantic = this.labeler.getElementByNumber(parsed.targetNumber);
+          if (matchedSemantic) {
+            const targetEl = this.discovery.getElementById(matchedSemantic.id);
+            if (targetEl) {
+              this.labeler.highlightBadge(parsed.targetNumber);
+              this.overlay.updateStatus("executing", `Item ${parsed.targetNumber}`);
+              this.actionEngine.clickElement(targetEl);
+              this.finishCommand(`Clicked #${parsed.targetNumber}`);
               return;
             }
-            this.overlay.updateStatus("executing", `Clicking ${best.text || "button"}`);
-            this.actionEngine.clickElement(domEl);
-            this.finishCommand(`Clicked "${best.text || "element"}"`);
+          } else {
+            this.finishCommand(`Badge #${parsed.targetNumber} not found.`);
             return;
           }
-        } else if (matches.length > 1) {
-          this.pendingCandidates = matches.slice(0, 4).map((m) => m.element);
-          this.labeler.show(this.pendingCandidates);
-          const prompt = `I found ${this.pendingCandidates.length} matching items. Say 1, 2, or 3.`;
-          tts.speak(prompt);
-          this.overlay.updateStatus("ambiguous", `Say 1 to ${this.pendingCandidates.length}`);
-          return;
         }
-      }
-      if (this.settings.aiAssistance && this.settings.aiProvider !== "offline") {
-        this.overlay.updateStatus("understanding", "Consulting AI model");
-        const compact = this.analyzer.getCompactRepresentation(30);
-        const aiPlan = await this.aiPlanner.planWithAI(parsed, compact, document.title);
-        if (aiPlan && aiPlan.actions.length > 0) {
-          for (const action of aiPlan.actions) {
-            this.actionEngine.executeStep(action);
+        if (["NEW_TAB", "CLOSE_TAB", "NEXT_TAB", "PREVIOUS_TAB"].includes(parsed.intent)) {
+          if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
+            chrome.runtime.sendMessage({ type: "VOXNAV_TAB_ACTION", action: parsed.intent });
+            this.finishCommand(`Tab: ${parsed.intent.toLowerCase().replace("_", " ")}`);
+            return;
           }
-          this.finishCommand(aiPlan.feedbackMessage || "AI action plan executed");
+        }
+        if (parsed.intent === "READ_PAGE" || parsed.intent === "DESCRIBE_PAGE") {
+          const outline = this.analyzer.getSpokenPageOutline();
+          this.finishCommand(outline);
           return;
         }
+        if (["SCROLL_DOWN", "SCROLL_UP", "SCROLL_TOP", "SCROLL_BOTTOM", "PAGE_DOWN", "PAGE_UP"].includes(parsed.intent)) {
+          this.actionEngine.executeStep({
+            type: parsed.intent,
+            description: `Scroll ${parsed.direction || "page"}`
+          });
+          this.finishCommand(`Scrolled ${parsed.direction?.toLowerCase() || "page"}`);
+          return;
+        }
+        if (["BACK", "FORWARD", "REFRESH", "HOME"].includes(parsed.intent)) {
+          this.actionEngine.executeStep({
+            type: parsed.intent,
+            description: `Navigate ${parsed.intent}`
+          });
+          this.finishCommand(`Navigating: ${parsed.intent.toLowerCase()}`);
+          return;
+        }
+        if (parsed.intent === "SEARCH" && parsed.value) {
+          const searchBox = this.analyzer.findPrimarySearchInput();
+          if (searchBox) {
+            const el = this.discovery.getElementById(searchBox.id);
+            if (el) {
+              this.actionEngine.typeIntoElement(el, parsed.value);
+              const form = el.closest("form");
+              if (form) {
+                form.requestSubmit();
+              } else {
+                el.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", code: "Enter", bubbles: true }));
+              }
+              this.finishCommand(`Searching: "${parsed.value}"`);
+              return;
+            }
+          } else {
+            window.open(`https://www.google.com/search?q=${encodeURIComponent(parsed.value)}`, "_blank");
+            this.finishCommand(`Searching: "${parsed.value}"`);
+            return;
+          }
+        }
+        if (parsed.intent === "TYPE" || parsed.intent === "CLEAR") {
+          const targetQuery = parsed.target || "input";
+          const matches = this.analyzer.findMatchingElements(targetQuery, "input");
+          if (matches.length > 0) {
+            const best = matches[0].element;
+            const domEl = this.discovery.getElementById(best.id);
+            if (domEl) {
+              if (parsed.intent === "CLEAR") {
+                this.actionEngine.clearElement(domEl);
+                this.finishCommand(`Cleared ${best.text || "input"}`);
+              } else {
+                this.actionEngine.typeIntoElement(domEl, parsed.value || "");
+                this.finishCommand(`Entered "${parsed.value}"`);
+              }
+              return;
+            }
+          }
+        }
+        if (parsed.intent === "SUBMIT") {
+          const step = { type: "SUBMIT", description: "Submit form" };
+          if (this.settings.requireHighImpactConfirmation && ActionValidator.isHighImpactAction(step)) {
+            this.pendingConfirmationStep = step;
+            const prompt = "Ready to submit. Say 'Confirm' to proceed.";
+            this.overlay.updateStatus("ambiguous", "Say 'Confirm'");
+            tts.speak(prompt);
+            return;
+          } else {
+            this.actionEngine.submitForm();
+            this.finishCommand("Form submitted");
+            return;
+          }
+        }
+        if (parsed.intent === "CLICK" || parsed.intent === "OPEN_LINK" || parsed.target) {
+          const targetQuery = parsed.target || parsed.raw;
+          const matches = this.analyzer.findMatchingElements(targetQuery, parsed.targetType);
+          if (matches.length === 1 || matches.length > 1 && matches[0].score - matches[1].score > 0.22) {
+            const best = matches[0].element;
+            const domEl = this.discovery.getElementById(best.id);
+            if (domEl) {
+              const step = {
+                type: "CLICK",
+                targetId: best.id,
+                description: `Click ${best.text || "target"}`
+              };
+              if (this.settings.requireHighImpactConfirmation && ActionValidator.isHighImpactAction(step, best.text)) {
+                this.pendingConfirmationStep = step;
+                const prompt = `Ready to ${best.text}. Say 'Confirm' to proceed.`;
+                this.overlay.updateStatus("ambiguous", "Say 'Confirm'");
+                tts.speak(prompt);
+                return;
+              }
+              this.overlay.updateStatus("executing", `Clicking ${best.text.slice(0, 15) || "button"}`);
+              this.actionEngine.clickElement(domEl);
+              this.finishCommand(`Clicked "${best.text.slice(0, 20) || "element"}"`);
+              return;
+            }
+          } else if (matches.length > 1) {
+            this.pendingCandidates = matches.slice(0, 3).map((m) => m.element);
+            this.labeler.show(this.pendingCandidates);
+            this.overlay.updateStatus("ambiguous", `Say 1 to ${this.pendingCandidates.length}`);
+            tts.speak(`Found ${this.pendingCandidates.length} matches. Say 1, 2, or 3.`);
+            return;
+          }
+        }
+        if (this.settings.aiAssistance && this.settings.aiProvider !== "offline") {
+          this.overlay.updateStatus("understanding", "AI planning");
+          const compact = this.analyzer.getCompactRepresentation(25);
+          const aiPlan = await this.aiPlanner.planWithAI(parsed, compact, document.title);
+          if (aiPlan && aiPlan.actions.length > 0) {
+            for (const action of aiPlan.actions) {
+              this.actionEngine.executeStep(action);
+            }
+            this.finishCommand(aiPlan.feedbackMessage || "Action executed");
+            return;
+          }
+        }
+        this.finishCommand(`No match found for "${cleanInput.slice(0, 24)}"`);
+      } finally {
+        this.isProcessingCommand = false;
       }
-      this.finishCommand(`I couldn't find a matching element for "${rawUtterance}" on this page.`);
     }
     finishCommand(feedback) {
       this.lastResultText = feedback;
       this.overlay.updateStatus("done", feedback);
-      tts.speak(feedback);
+      if (this.settings.voiceFeedback) {
+        tts.speak(feedback);
+      }
     }
     /**
      * Hackathon Interactive Demo Mode
      */
     async startInteractiveDemo() {
       this.overlay.show();
-      this.overlay.updateStatus("understanding", "Starting VoxNav Demo");
-      tts.speak("Welcome to VoxNav. Starting interactive demonstration.");
-      await new Promise((r) => setTimeout(r, 1800));
-      this.overlay.updateStatus("executing", "Step 1: Discovering elements");
+      this.overlay.updateStatus("understanding", "Starting Demo");
+      tts.speak("Welcome to VoxNav demonstration.");
+      await new Promise((r) => setTimeout(r, 1600));
+      this.overlay.updateStatus("executing", "Step 1: Numbering elements");
       const elements = this.analyzer.refresh();
       this.labeler.show(elements);
-      tts.speak(`Detected ${elements.length} interactive elements. Numbering targets.`);
-      await new Promise((r) => setTimeout(r, 2200));
-      this.overlay.setTranscript("Scroll down a little");
-      this.overlay.updateStatus("executing", "Step 2: Voice command executed");
-      this.actionEngine.scroll("DOWN", "SMALL");
-      tts.speak("Scrolling page down.");
       await new Promise((r) => setTimeout(r, 2e3));
-      this.overlay.setTranscript("Highlighting primary navigation");
+      this.overlay.setTranscript("Scroll down a little");
+      this.overlay.updateStatus("executing", "Step 2: Scrolling");
+      this.actionEngine.scroll("DOWN", "SMALL");
+      await new Promise((r) => setTimeout(r, 1800));
+      this.overlay.setTranscript("Highlighting primary target");
       this.labeler.highlightBadge(1);
-      this.overlay.updateStatus("done", "Demo complete! Speak any command.");
-      tts.speak("VoxNav is ready. Speak, navigate, control the web.");
+      this.overlay.updateStatus("done", "Ready! Speak any command.");
     }
   };
   if (typeof window !== "undefined") {

@@ -1,6 +1,6 @@
 /**
  * VoxNav - Text to Speech Engine
- * Abstraction layer for voice feedback
+ * Abstraction layer for voice feedback with echo prevention
  */
 
 export class TextToSpeechEngine {
@@ -9,6 +9,9 @@ export class TextToSpeechEngine {
   private pitch: number = 1.0;
   private preferredLang: string = "en-US";
   private synth: SpeechSynthesis | null = null;
+
+  public isSpeaking: boolean = false;
+  private lastSpokenTimestamp: number = 0;
 
   constructor() {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
@@ -23,6 +26,17 @@ export class TextToSpeechEngine {
     this.preferredLang = lang;
   }
 
+  /**
+   * Returns true while TTS is playing or within the 650ms reverberation window.
+   * This is critical to prevent the microphone from picking up its own voice.
+   */
+  public isCurrentlySpeaking(): boolean {
+    if (this.isSpeaking) return true;
+    if (this.synth && this.synth.speaking) return true;
+    if (Date.now() - this.lastSpokenTimestamp < 650) return true;
+    return false;
+  }
+
   public speak(text: string, onEnd?: () => void): void {
     if (!this.enabled || !text) {
       if (onEnd) onEnd();
@@ -30,7 +44,6 @@ export class TextToSpeechEngine {
     }
 
     if (!this.synth) {
-      // Fallback: Notify background if window.speechSynthesis is unavailable
       if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
         chrome.runtime.sendMessage({ type: "VOXNAV_SPEAK", text });
       }
@@ -53,18 +66,25 @@ export class TextToSpeechEngine {
         utterance.voice = matchingVoice;
       }
 
-      utterance.onend = () => {
+      this.isSpeaking = true;
+
+      const finish = () => {
+        this.isSpeaking = false;
+        this.lastSpokenTimestamp = Date.now();
         if (onEnd) onEnd();
       };
 
+      utterance.onend = finish;
       utterance.onerror = (e) => {
         console.warn("[VoxNav TTS] Speech error:", e);
-        if (onEnd) onEnd();
+        finish();
       };
 
       this.synth.speak(utterance);
     } catch (err) {
       console.warn("[VoxNav TTS] Exception during speech synthesis:", err);
+      this.isSpeaking = false;
+      this.lastSpokenTimestamp = Date.now();
       if (onEnd) onEnd();
     }
   }
@@ -73,6 +93,8 @@ export class TextToSpeechEngine {
     if (this.synth) {
       this.synth.cancel();
     }
+    this.isSpeaking = false;
+    this.lastSpokenTimestamp = Date.now();
   }
 }
 
