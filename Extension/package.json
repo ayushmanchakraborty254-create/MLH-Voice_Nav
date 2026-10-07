@@ -1,0 +1,26 @@
+{
+  "name": "voxnav-extension",
+  "version": "1.0.0",
+  "description": "VoxNav — Universal Voice Navigation for the Web. Speak. Navigate. Control the Web.",
+  "main": "dist/background.bundle.js",
+  "scripts": {
+    "build": "node build.js",
+    "watch": "node build.js --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "voice-navigation",
+    "accessibility",
+    "chrome-extension",
+    "speech-recognition",
+    "ai-agent",
+    "hands-free"
+  ],
+  "author": "VoxNav Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/chrome": "^0.0.300",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.7.0"
+  }
+}

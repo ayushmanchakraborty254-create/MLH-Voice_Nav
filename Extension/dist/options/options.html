@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VoxNav — Settings & Preferences</title>
+  <link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <div class="settings-wrapper">
+    <!-- Sidebar / Header -->
+    <header class="settings-header">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+            <line x1="12" x2="12" y1="19" y2="22"></line>
+          </svg>
+        </div>
+        <div>
+          <h1>VoxNav Preferences</h1>
+          <p class="subtitle">Universal Voice Navigation Configuration</p>
+        </div>
+      </div>
+      <button class="save-btn" id="btn-save">Save Settings</button>
+    </header>
+
+    <div class="settings-content">
+      <!-- Section 1: Voice & Speech -->
+      <section class="section-card">
+        <h2 class="section-title">🎙️ Voice & Speech</h2>
+        <div class="form-group">
+          <label for="opt-language">Recognition Language</label>
+          <select id="opt-language" class="form-select">
+            <option value="en-US">English (United States / Global)</option>
+            <option value="hi-IN">हिन्दी (Hindi / Hinglish)</option>
+            <option value="bn-IN">বাংলা (Bengali / Banglish)</option>
+            <option value="auto">Auto-detect</option>
+          </select>
+          <span class="help-text">Speech recognition dialect used for listening and spoken intent parsing.</span>
+        </div>
+
+        <div class="form-row">
+          <div class="toggle-control">
+            <input type="checkbox" id="opt-voice-feedback" />
+            <label for="opt-voice-feedback">Spoken Feedback (Text-to-Speech)</label>
+          </div>
+          <span class="help-text">Audibly confirms when buttons are clicked, forms filled, or errors occur.</span>
+        </div>
+
+        <div class="form-group">
+          <label for="opt-speech-rate">Speech Speed (<span id="rate-value">1.0x</span>)</label>
+          <input type="range" id="opt-speech-rate" min="0.7" max="1.5" step="0.1" value="1.0" class="slider" />
+        </div>
+      </section>
+
+      <!-- Section 2: Navigation & Overlay -->
+      <section class="section-card">
+        <h2 class="section-title">🧭 Navigation & On-Page UI</h2>
+        <div class="form-row">
+          <div class="toggle-control">
+            <input type="checkbox" id="opt-floating-mic" />
+            <label for="opt-floating-mic">Floating Microphone Widget</label>
+          </div>
+          <span class="help-text">Displays a sleek, draggable microphone pill in the corner of webpages.</span>
+        </div>
+
+        <div class="form-row">
+          <div class="toggle-control">
+            <input type="checkbox" id="opt-numbered-labels" />
+            <label for="opt-numbered-labels">Always Show Numbered Target Badges</label>
+          </div>
+          <span class="help-text">Overlays numbers on all interactive elements automatically for quick "Click 3" commands.</span>
+        </div>
+
+        <div class="form-row">
+          <div class="toggle-control">
+            <input type="checkbox" id="opt-high-impact-confirm" checked />
+            <label for="opt-high-impact-confirm">Require Confirmation for Dangerous Actions</label>
+          </div>
+          <span class="help-text">Asks "Say Confirm to proceed" before deleting, paying, or submitting sensitive orders.</span>
+        </div>
+      </section>
+
+      <!-- Section 3: AI Model Configuration -->
+      <section class="section-card">
+        <h2 class="section-title">🧠 AI Model & Reasoning</h2>
+        <div class="form-row">
+          <div class="toggle-control">
+            <input type="checkbox" id="opt-ai-assist" checked />
+            <label for="opt-ai-assist">Enable Semantic AI Assistance</label>
+          </div>
+          <span class="help-text">Uses an LLM when commands require complex reasoning (e.g. "Find the cheapest laptop").</span>
+        </div>
+
+        <div class="form-group">
+          <label for="opt-ai-provider">AI Provider</label>
+          <select id="opt-ai-provider" class="form-select">
+            <option value="offline">Offline / Local Heuristic (Zero API Key, Private)</option>
+            <option value="groq">Groq Cloud (Fast LPU, llama-3.3-70b / qwen2.5)</option>
+            <option value="openai">OpenAI (gpt-4o-mini / gpt-4o)</option>
+            <option value="ollama">Ollama (Local Self-Hosted LLM)</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="group-api-key" style="display: none;">
+          <label for="opt-ai-api-key">API Key</label>
+          <input type="password" id="opt-ai-api-key" placeholder="Enter API Key" class="form-input" />
+          <span class="help-text">Stored locally in your secure Chrome sync storage. Never shared.</span>
+        </div>
+
+        <div class="form-group" id="group-endpoint" style="display: none;">
+          <label for="opt-ai-endpoint">Custom Endpoint URL</label>
+          <input type="text" id="opt-ai-endpoint" placeholder="http://localhost:11434/api/generate" class="form-input" />
+        </div>
+      </section>
+
+      <!-- Section 4: Privacy & Security -->
+      <section class="section-card">
+        <h2 class="section-title">🔒 Privacy & Data Protection</h2>
+        <div class="form-row">
+          <div class="toggle-control">
+            <input type="checkbox" id="opt-show-mic-indicator" checked />
+            <label for="opt-show-mic-indicator">Visual Recording Indicator</label>
+          </div>
+          <span class="help-text">Explicitly shows a glowing red dot whenever the microphone is capturing audio.</span>
+        </div>
+
+        <div class="form-row">
+          <div class="toggle-control">
+            <input type="checkbox" id="opt-send-context" />
+            <label for="opt-send-context">Allow Minimal Page Context Transmission</label>
+          </div>
+          <span class="help-text">Only sends non-sensitive button labels to the AI provider. Form values and passwords are never transmitted.</span>
+        </div>
+      </section>
+
+      <!-- Section 5: Interactive Playground -->
+      <section class="section-card playground-card">
+        <h2 class="section-title">🧪 Voice Playground (Try it here!)</h2>
+        <p class="playground-desc">You can test VoxNav commands right on this page! Click the mic widget or say commands like: <em>"Click Start Free"</em>, <em>"Select Premium"</em>, or <em>"Show numbers"</em>.</p>
+
+        <div class="playground-elements">
+          <button class="playground-btn" id="play-btn-1">Get Started Free</button>
+          <button class="playground-btn secondary" id="play-btn-2">View Documentation</button>
+          <input type="text" placeholder="Type your username..." class="form-input" id="play-input" />
+          <select class="form-select" id="play-select">
+            <option>Basic Plan</option>
+            <option>Pro Plan</option>
+            <option>Enterprise</option>
+          </select>
+        </div>
+        <div id="play-feedback" class="playground-feedback">Interactive target test area ready.</div>
+      </section>
+    </div>
+  </div>
+
+  <script src="options.bundle.js"></script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+{
+  "manifest_version": 3,
+  "name": "VoxNav — Universal Voice Navigation",
+  "version": "1.0.0",
+  "description": "Speak. Navigate. Control the Web. Hands-free voice navigation, clicking, typing, and exploration for any website.",
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "storage",
+    "scripting",
+    "tts"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "dist/popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "VoxNav — Voice Web Controller"
+  },
+  "background": {
+    "service_worker": "dist/background.bundle.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "dist/content.bundle.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_page": "dist/options/options.html",
+  "commands": {
+    "toggle-voice": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+V",
+        "mac": "Command+Shift+V"
+      },
+      "description": "Toggle VoxNav Voice Listening"
+    }
+  }
+}

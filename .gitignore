@@ -2,8 +2,8 @@
 node_modules/
 .next/
 out/
-build/
 dist/
+!Extension/dist/
 
 # Environment Variables
 .env
