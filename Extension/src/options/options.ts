@@ -15,6 +15,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   const optFloatingMic = document.getElementById("opt-floating-mic") as HTMLInputElement;
   const optNumberedLabels = document.getElementById("opt-numbered-labels") as HTMLInputElement;
   const optHighImpactConfirm = document.getElementById("opt-high-impact-confirm") as HTMLInputElement;
+  const optSpacebarActivation = document.getElementById("opt-spacebar-activation") as HTMLInputElement;
+
+  const optProfileUsername = document.getElementById("opt-profile-username") as HTMLInputElement;
+  const optProfileName = document.getElementById("opt-profile-name") as HTMLInputElement;
+  const optProfilePhone = document.getElementById("opt-profile-phone") as HTMLInputElement;
 
   const optAiAssist = document.getElementById("opt-ai-assist") as HTMLInputElement;
   const optAiProvider = document.getElementById("opt-ai-provider") as HTMLSelectElement;
@@ -47,6 +52,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   optFloatingMic.checked = settings.floatingMic;
   optNumberedLabels.checked = settings.numberedLabels;
   optHighImpactConfirm.checked = settings.requireHighImpactConfirmation;
+  optSpacebarActivation.checked = settings.spacebarActivation !== false;
+
+  optProfileUsername.value = settings.savedProfile?.username || settings.savedProfile?.email || "";
+  optProfileName.value = settings.savedProfile?.name || "";
+  optProfilePhone.value = settings.savedProfile?.phone || "";
 
   optAiAssist.checked = settings.aiAssistance;
   optAiProvider.value = settings.aiProvider;
@@ -89,6 +99,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       floatingMic: optFloatingMic.checked,
       numberedLabels: optNumberedLabels.checked,
       requireHighImpactConfirmation: optHighImpactConfirm.checked,
+      spacebarActivation: optSpacebarActivation.checked,
+      savedProfile: {
+        username: optProfileUsername.value.trim(),
+        email: optProfileUsername.value.trim(),
+        name: optProfileName.value.trim(),
+        phone: optProfilePhone.value.trim()
+      },
       aiAssistance: optAiAssist.checked,
       aiProvider: optAiProvider.value as any,
       aiApiKey: optAiApiKey.value.trim(),

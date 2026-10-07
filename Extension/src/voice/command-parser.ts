@@ -44,6 +44,11 @@ export class CommandParser {
       return { raw: rawUtterance, intent: "HELP", confidence: 0.95, language: lang };
     }
 
+    // --- Smart Login & Credentials Assistant ---
+    if (/\b(log me in|login to my account|fill credentials|fill my credentials|fill login|help me login|autofill credentials|enter credentials|credentials bharo|login karo|log in koro)\b/i.test(text)) {
+      return { raw: rawUtterance, intent: "LOGIN_ASSIST", confidence: 0.98, language: lang };
+    }
+
     // --- Numbered Mode Controls ---
     // e.g. "show numbers", "show navigation options", "turn on numbers", "numbers on"
     if (/\b(show numbers|show navigation|navigation options|display numbers|turn on numbers|number dekhao)\b/i.test(text)) {

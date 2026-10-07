@@ -13,6 +13,7 @@
     showMicIndicator: true,
     sendPageContextToAi: false,
     requireHighImpactConfirmation: true,
+    spacebarActivation: true,
     theme: "auto"
   };
 

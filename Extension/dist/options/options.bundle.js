@@ -13,6 +13,7 @@
     showMicIndicator: true,
     sendPageContextToAi: false,
     requireHighImpactConfirmation: true,
+    spacebarActivation: true,
     theme: "auto"
   };
 
@@ -25,6 +26,10 @@
     const optFloatingMic = document.getElementById("opt-floating-mic");
     const optNumberedLabels = document.getElementById("opt-numbered-labels");
     const optHighImpactConfirm = document.getElementById("opt-high-impact-confirm");
+    const optSpacebarActivation = document.getElementById("opt-spacebar-activation");
+    const optProfileUsername = document.getElementById("opt-profile-username");
+    const optProfileName = document.getElementById("opt-profile-name");
+    const optProfilePhone = document.getElementById("opt-profile-phone");
     const optAiAssist = document.getElementById("opt-ai-assist");
     const optAiProvider = document.getElementById("opt-ai-provider");
     const groupApiKey = document.getElementById("group-api-key");
@@ -48,6 +53,10 @@
     optFloatingMic.checked = settings.floatingMic;
     optNumberedLabels.checked = settings.numberedLabels;
     optHighImpactConfirm.checked = settings.requireHighImpactConfirmation;
+    optSpacebarActivation.checked = settings.spacebarActivation !== false;
+    optProfileUsername.value = settings.savedProfile?.username || settings.savedProfile?.email || "";
+    optProfileName.value = settings.savedProfile?.name || "";
+    optProfilePhone.value = settings.savedProfile?.phone || "";
     optAiAssist.checked = settings.aiAssistance;
     optAiProvider.value = settings.aiProvider;
     optAiApiKey.value = settings.aiApiKey || "";
@@ -81,6 +90,13 @@
         floatingMic: optFloatingMic.checked,
         numberedLabels: optNumberedLabels.checked,
         requireHighImpactConfirmation: optHighImpactConfirm.checked,
+        spacebarActivation: optSpacebarActivation.checked,
+        savedProfile: {
+          username: optProfileUsername.value.trim(),
+          email: optProfileUsername.value.trim(),
+          name: optProfileName.value.trim(),
+          phone: optProfilePhone.value.trim()
+        },
         aiAssistance: optAiAssist.checked,
         aiProvider: optAiProvider.value,
         aiApiKey: optAiApiKey.value.trim(),

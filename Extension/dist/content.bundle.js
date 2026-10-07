@@ -166,6 +166,7 @@
     showMicIndicator: true,
     sendPageContextToAi: false,
     requireHighImpactConfirmation: true,
+    spacebarActivation: true,
     theme: "auto"
   };
   var ALLOWED_INTENTS = /* @__PURE__ */ new Set([
@@ -190,6 +191,8 @@
     "SUBMIT",
     "CHECK",
     "UNCHECK",
+    "LOGIN_ASSIST",
+    "AUTOFILL_CREDENTIALS",
     "SEARCH",
     "FIND_ON_PAGE",
     "READ_PAGE",
@@ -1509,6 +1512,178 @@
   };
   var tts = new TextToSpeechEngine();
 
+  // src/content/login-assistant.ts
+  var LoginAssistant = class {
+    discovery;
+    actionEngine;
+    settings;
+    currentStep = "idle";
+    detectedElements = null;
+    constructor(discovery, actionEngine, settings) {
+      this.discovery = discovery;
+      this.actionEngine = actionEngine;
+      this.settings = settings;
+    }
+    updateSettings(settings) {
+      this.settings = settings;
+    }
+    /**
+     * Scans the DOM for standard login form fields.
+     */
+    detectLoginForm() {
+      const passwordInputs = Array.from(document.querySelectorAll('input[type="password"]')).filter(
+        (el) => this.discovery.isVisible(el)
+      );
+      if (passwordInputs.length === 0) {
+        return null;
+      }
+      const passwordField = passwordInputs[0];
+      const form = passwordField.closest("form") || void 0;
+      const candidateInputs = form ? Array.from(form.querySelectorAll("input:not([type='hidden']):not([type='password']):not([type='checkbox']):not([type='radio'])")) : Array.from(document.querySelectorAll("input:not([type='hidden']):not([type='password'])"));
+      const usernameField = candidateInputs.find((input) => {
+        if (!this.discovery.isVisible(input)) return false;
+        const type = (input.type || "").toLowerCase();
+        const name = (input.name || "").toLowerCase();
+        const id = (input.id || "").toLowerCase();
+        const autocomplete = (input.autocomplete || "").toLowerCase();
+        const placeholder = (input.placeholder || "").toLowerCase();
+        return type === "email" || autocomplete.includes("username") || autocomplete.includes("email") || name.includes("user") || name.includes("email") || name.includes("login") || id.includes("user") || id.includes("email") || id.includes("login") || placeholder.includes("email") || placeholder.includes("user") || placeholder.includes("phone");
+      }) || candidateInputs[0];
+      let submitButton;
+      if (form) {
+        submitButton = form.querySelector("button[type='submit'], input[type='submit']") || void 0;
+      }
+      if (!submitButton) {
+        const allButtons = Array.from(document.querySelectorAll("button, a, input[type='button']"));
+        submitButton = allButtons.find((btn) => {
+          if (!this.discovery.isVisible(btn)) return false;
+          const text = (btn.textContent || btn.value || "").toLowerCase();
+          return text.includes("log in") || text.includes("sign in") || text.includes("login") || text.includes("signin") || text.includes("submit");
+        });
+      }
+      const checkbox = form ? form.querySelector("input[type='checkbox']") || void 0 : void 0;
+      this.detectedElements = {
+        form,
+        usernameField,
+        passwordField,
+        submitButton,
+        rememberMeCheckbox: checkbox
+      };
+      return this.detectedElements;
+    }
+    isHandlingLogin() {
+      return this.currentStep !== "idle";
+    }
+    getCurrentStep() {
+      return this.currentStep;
+    }
+    reset() {
+      this.currentStep = "idle";
+      this.detectedElements = null;
+    }
+    /**
+     * Initiates interactive credential flow.
+     */
+    async startLoginAssist() {
+      const fields = this.detectLoginForm();
+      if (!fields || !fields.passwordField) {
+        return "No active login form detected on this page.";
+      }
+      const saved = this.settings.savedProfile;
+      const defaultUser = saved?.email || saved?.username;
+      if (defaultUser && fields.usernameField) {
+        this.actionEngine.typeIntoElement(fields.usernameField, defaultUser);
+        this.focusPasswordAndTriggerAutofill(fields.passwordField);
+        this.currentStep = "ready_to_submit";
+        const msg = `Filled username as ${defaultUser} and activated password manager. Say 'Submit' when ready.`;
+        tts.speak(msg);
+        return msg;
+      }
+      if (fields.usernameField) {
+        this.actionEngine.highlightElement(fields.usernameField, "#2563EB", 2500);
+        fields.usernameField.focus();
+        this.currentStep = "awaiting_username";
+        const msg = "Login form detected. What is your email or username?";
+        tts.speak(msg);
+        return msg;
+      } else {
+        this.focusPasswordAndTriggerAutofill(fields.passwordField);
+        this.currentStep = "ready_to_submit";
+        const msg = "Password field focused. Choose your credentials from your password manager, then say 'Submit'.";
+        tts.speak(msg);
+        return msg;
+      }
+    }
+    /**
+     * Handles user's spoken response during the login interaction.
+     */
+    async handleLoginDialogue(utterance) {
+      const clean = utterance.trim();
+      const fields = this.detectedElements || this.detectLoginForm();
+      if (!fields) {
+        this.reset();
+        return "Login form lost.";
+      }
+      if (this.currentStep === "awaiting_username") {
+        let usernameValue = clean.replace(/^(my (email|username|user) is|it is|it's|fill|use)\s+/i, "").replace(/\s+at\s+/gi, "@").replace(/\s+dot\s+/gi, ".").trim();
+        if (fields.usernameField) {
+          this.actionEngine.typeIntoElement(fields.usernameField, usernameValue);
+        }
+        if (fields.passwordField) {
+          this.focusPasswordAndTriggerAutofill(fields.passwordField);
+          this.currentStep = "ready_to_submit";
+          const msg = `Username set. Password field active. Select your saved password from your password manager or say 'Submit'.`;
+          tts.speak(msg);
+          return msg;
+        } else {
+          this.currentStep = "ready_to_submit";
+          return "Username filled. Ready to submit.";
+        }
+      }
+      if (this.currentStep === "ready_to_submit") {
+        if (/^(submit|login|sign in|log in|proceed|go|haan|yes)\b/i.test(clean)) {
+          if (fields.submitButton) {
+            this.actionEngine.clickElement(fields.submitButton);
+          } else if (fields.form) {
+            fields.form.requestSubmit();
+          }
+          this.reset();
+          const msg = "Submitting login credentials.";
+          tts.speak(msg);
+          return msg;
+        } else if (/^(cancel|stop|abort|nah|no)\b/i.test(clean)) {
+          this.reset();
+          return "Login cancelled.";
+        }
+      }
+      return "Say 'Submit' to log in, or 'Cancel'.";
+    }
+    /**
+     * Focuses password field and triggers native browser credential manager prompt.
+     */
+    focusPasswordAndTriggerAutofill(passwordEl) {
+      this.actionEngine.highlightElement(passwordEl, "#16A34A", 3e3);
+      passwordEl.focus();
+      passwordEl.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+      passwordEl.dispatchEvent(new FocusEvent("focus", { bubbles: true }));
+      if (typeof navigator !== "undefined" && navigator.credentials?.get) {
+        try {
+          navigator.credentials.get({
+            password: true,
+            mediation: "optional"
+          }).then((cred) => {
+            if (cred && cred.id && cred.password && this.detectedElements?.usernameField) {
+              this.actionEngine.typeIntoElement(this.detectedElements.usernameField, cred.id);
+              this.actionEngine.typeIntoElement(passwordEl, cred.password);
+            }
+          }).catch(() => {
+          });
+        } catch (e) {
+        }
+      }
+    }
+  };
+
   // src/voice/speech-recognition.ts
   var WebSpeechEngine = class {
     recognition = null;
@@ -1725,6 +1900,9 @@
       }
       if (/\b(help|what can i say|commands|how to use)\b/i.test(text)) {
         return { raw: rawUtterance, intent: "HELP", confidence: 0.95, language: lang };
+      }
+      if (/\b(log me in|login to my account|fill credentials|fill my credentials|fill login|help me login|autofill credentials|enter credentials|credentials bharo|login karo|log in koro)\b/i.test(text)) {
+        return { raw: rawUtterance, intent: "LOGIN_ASSIST", confidence: 0.98, language: lang };
       }
       if (/\b(show numbers|show navigation|navigation options|display numbers|turn on numbers|number dekhao)\b/i.test(text)) {
         return { raw: rawUtterance, intent: "SHOW_NUMBERS", confidence: 0.98, language: lang };
@@ -2138,6 +2316,7 @@ Identify the best target element(s) to fulfill the user's command and return the
     labeler;
     actionEngine;
     overlay;
+    loginAssistant;
     speechEngine;
     aiPlanner;
     isListening = false;
@@ -2153,6 +2332,7 @@ Identify the best target element(s) to fulfill the user's command and return the
       this.analyzer = new PageAnalyzer(this.discovery);
       this.labeler = new ElementLabeler(this.discovery);
       this.actionEngine = new ActionEngine(this.discovery);
+      this.loginAssistant = new LoginAssistant(this.discovery, this.actionEngine, this.settings);
       this.aiPlanner = new AIPlanner(this.settings);
       this.overlay = new FloatingOverlay({
         onToggleMic: () => this.toggleListening(),
@@ -2182,6 +2362,16 @@ Identify the best target element(s) to fulfill the user's command and return the
         this.overlay.init();
       }
       this.setupMessageListener();
+      window.addEventListener("keydown", (e) => {
+        if (e.code === "Space" && this.settings.spacebarActivation) {
+          const activeEl = document.activeElement;
+          const isInput = activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName === "TEXTAREA" || activeEl.isContentEditable || activeEl.getAttribute("role") === "textbox" || activeEl.closest("#voxnav-root")?.querySelector("input:focus"));
+          if (!isInput) {
+            e.preventDefault();
+            this.toggleListening();
+          }
+        }
+      });
       this.analyzer.refresh();
     }
     applySettings() {
@@ -2193,6 +2383,7 @@ Identify the best target element(s) to fulfill the user's command and return the
       );
       this.speechEngine.setLanguage(this.settings.language === "auto" ? "en-US" : this.settings.language);
       this.aiPlanner.updateSettings(this.settings);
+      this.loginAssistant.updateSettings(this.settings);
       if (this.settings.floatingMic) {
         this.overlay.show();
       } else {
@@ -2309,6 +2500,11 @@ Identify the best target element(s) to fulfill the user's command and return the
       this.overlay.updateStatus("understanding");
       this.overlay.setTranscript(cleanInput);
       try {
+        if (this.loginAssistant.isHandlingLogin()) {
+          const reply = await this.loginAssistant.handleLoginDialogue(cleanInput);
+          this.finishCommand(reply);
+          return;
+        }
         if (this.pendingConfirmationStep) {
           if (/^(confirm|yes|proceed|sure|haan|thik ache)\b/i.test(cleanInput)) {
             const step = this.pendingConfirmationStep;
@@ -2339,6 +2535,11 @@ Identify the best target element(s) to fulfill the user's command and return the
           }
         }
         const parsed = CommandParser.parse(cleanInput);
+        if (parsed.intent === "LOGIN_ASSIST") {
+          const reply = await this.loginAssistant.startLoginAssist();
+          this.finishCommand(reply);
+          return;
+        }
         if (parsed.intent === "START_DEMO") {
           await this.startInteractiveDemo();
           return;

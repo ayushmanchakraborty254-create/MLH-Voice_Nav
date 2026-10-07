@@ -9,6 +9,7 @@ import { PageAnalyzer } from "./page-analyzer";
 import { ElementLabeler } from "./element-labeler";
 import { ActionEngine } from "./action-engine";
 import { FloatingOverlay } from "./overlay";
+import { LoginAssistant } from "./login-assistant";
 import { WebSpeechEngine } from "../voice/speech-recognition";
 import { CommandParser } from "../voice/command-parser";
 import { tts } from "../voice/text-to-speech";
@@ -30,6 +31,7 @@ export class VoxNavContentApp {
   private labeler: ElementLabeler;
   private actionEngine: ActionEngine;
   private overlay: FloatingOverlay;
+  private loginAssistant: LoginAssistant;
   private speechEngine: WebSpeechEngine;
   private aiPlanner: AIPlanner;
 
@@ -48,6 +50,7 @@ export class VoxNavContentApp {
     this.analyzer = new PageAnalyzer(this.discovery);
     this.labeler = new ElementLabeler(this.discovery);
     this.actionEngine = new ActionEngine(this.discovery);
+    this.loginAssistant = new LoginAssistant(this.discovery, this.actionEngine, this.settings);
     this.aiPlanner = new AIPlanner(this.settings);
 
     this.overlay = new FloatingOverlay({
@@ -88,7 +91,26 @@ export class VoxNavContentApp {
     // 3. Register message listeners from background or popup
     this.setupMessageListener();
 
-    // 4. Update element index
+    // 4. Global Spacebar Voice Activation Shortcut (when not actively typing inside input fields)
+    window.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (e.code === "Space" && this.settings.spacebarActivation) {
+        const activeEl = document.activeElement as HTMLElement | null;
+        const isInput = activeEl && (
+          activeEl.tagName === "INPUT" ||
+          activeEl.tagName === "TEXTAREA" ||
+          activeEl.isContentEditable ||
+          activeEl.getAttribute("role") === "textbox" ||
+          activeEl.closest("#voxnav-root")?.querySelector("input:focus")
+        );
+
+        if (!isInput) {
+          e.preventDefault(); // Stop webpage from scrolling down on spacebar
+          this.toggleListening();
+        }
+      }
+    });
+
+    // 5. Update element index
     this.analyzer.refresh();
   }
 
@@ -101,6 +123,7 @@ export class VoxNavContentApp {
     );
     this.speechEngine.setLanguage(this.settings.language === "auto" ? "en-US" : this.settings.language);
     this.aiPlanner.updateSettings(this.settings);
+    this.loginAssistant.updateSettings(this.settings);
 
     if (this.settings.floatingMic) {
       this.overlay.show();
@@ -241,6 +264,13 @@ export class VoxNavContentApp {
     this.overlay.setTranscript(cleanInput);
 
     try {
+      // 0. Check if LoginAssistant is in an active credential dialogue
+      if (this.loginAssistant.isHandlingLogin()) {
+        const reply = await this.loginAssistant.handleLoginDialogue(cleanInput);
+        this.finishCommand(reply);
+        return;
+      }
+
       // 1. Check for Pending High-Impact Confirmation
       if (this.pendingConfirmationStep) {
         if (/^(confirm|yes|proceed|sure|haan|thik ache)\b/i.test(cleanInput)) {
@@ -278,6 +308,11 @@ export class VoxNavContentApp {
       const parsed = CommandParser.parse(cleanInput);
 
       // 4. Handle System / Accessibility Metacommands
+      if (parsed.intent === "LOGIN_ASSIST") {
+        const reply = await this.loginAssistant.startLoginAssist();
+        this.finishCommand(reply);
+        return;
+      }
       if (parsed.intent === "START_DEMO") {
         await this.startInteractiveDemo();
         return;

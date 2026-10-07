@@ -22,12 +22,14 @@ export type IntentType =
   | "FOCUS"
   | "HOVER"
   | "SELECT"
-  // Forms
+  // Forms & Auth
   | "TYPE"
   | "CLEAR"
   | "SUBMIT"
   | "CHECK"
   | "UNCHECK"
+  | "LOGIN_ASSIST"
+  | "AUTOFILL_CREDENTIALS"
   // Search
   | "SEARCH"
   | "FIND_ON_PAGE"
@@ -155,6 +157,13 @@ export interface VoxNavSettings {
   showMicIndicator: boolean;
   sendPageContextToAi: boolean;
   requireHighImpactConfirmation: boolean;
+  spacebarActivation: boolean;
+  savedProfile?: {
+    name?: string;
+    email?: string;
+    username?: string;
+    phone?: string;
+  };
   theme: "auto" | "light" | "dark";
 }
 

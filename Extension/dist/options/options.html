@@ -81,6 +81,39 @@
           </div>
           <span class="help-text">Asks "Say Confirm to proceed" before deleting, paying, or submitting sensitive orders.</span>
         </div>
+
+        <div class="form-row">
+          <div class="toggle-control">
+            <input type="checkbox" id="opt-spacebar-activation" checked />
+            <label for="opt-spacebar-activation">Spacebar Push-to-Talk / Toggle</label>
+          </div>
+          <span class="help-text">Press <strong>Spacebar</strong> on any page to immediately start/stop voice listening. (Automatically ignored when typing into text boxes).</span>
+        </div>
+      </section>
+
+      <!-- Section: Smart Credentials & Password Manager Assistant -->
+      <section class="section-card">
+        <h2 class="section-title">🔑 Smart Login & Identity Profile</h2>
+        <p style="font-size: 13px; color: #475569; margin-bottom: 12px;">
+          When on any login page, say <em>"Log me in"</em> or <em>"Fill credentials"</em>. VoxNav automatically fills your username, focuses the password field, and triggers your browser's password manager (Chrome / Bitwarden / 1Password) so you can authenticate hands-free.
+        </p>
+
+        <div class="form-group">
+          <label for="opt-profile-username">Saved Email / Username</label>
+          <input type="text" id="opt-profile-username" placeholder="e.g. ayushman@example.com" class="form-input" />
+          <span class="help-text">Used to autofill username/email fields on login portals.</span>
+        </div>
+
+        <div class="form-group">
+          <label for="opt-profile-name">Full Name</label>
+          <input type="text" id="opt-profile-name" placeholder="e.g. Ayushman" class="form-input" />
+          <span class="help-text">Used when saying "Fill my name".</span>
+        </div>
+
+        <div class="form-group">
+          <label for="opt-profile-phone">Phone Number</label>
+          <input type="text" id="opt-profile-phone" placeholder="e.g. +91 9876543210" class="form-input" />
+        </div>
       </section>
 
       <!-- Section 3: AI Model Configuration -->

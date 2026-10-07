@@ -16,6 +16,7 @@ export const DEFAULT_SETTINGS: VoxNavSettings = {
   showMicIndicator: true,
   sendPageContextToAi: false,
   requireHighImpactConfirmation: true,
+  spacebarActivation: true,
   theme: "auto"
 };
 
@@ -41,6 +42,8 @@ export const ALLOWED_INTENTS: Set<IntentType> = new Set([
   "SUBMIT",
   "CHECK",
   "UNCHECK",
+  "LOGIN_ASSIST",
+  "AUTOFILL_CREDENTIALS",
   "SEARCH",
   "FIND_ON_PAGE",
   "READ_PAGE",
