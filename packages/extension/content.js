@@ -381,29 +381,24 @@
     return fullContent.slice(0, 1500);
   }
 
-  function getDOMSnapshot() {
+  function getDOMSnapshot(userQuery = "") {
     const trueModal = getActiveTrueModalContainer();
-    if (trueModal) {
-      modalBadge.innerText = "MODAL OPEN";
-      modalBadge.style.background = "rgba(245, 158, 11, 0.2)";
-      modalBadge.style.color = "#fbbf24";
-    } else {
-      modalBadge.innerText = "ACTIVE TAB";
-      modalBadge.style.background = "rgba(16, 185, 129, 0.2)";
-      modalBadge.style.color = "#34d399";
+    if (modalBadge) {
+      if (trueModal) {
+        modalBadge.innerText = "MODAL OPEN";
+        modalBadge.style.background = "#F8E5B8";
+        modalBadge.style.color = "#78350F";
+      } else {
+        modalBadge.innerText = "ACTIVE TAB";
+        modalBadge.style.background = "#F8E5B8";
+        modalBadge.style.color = "#78350F";
+      }
     }
-
-    const headings = Array.from(document.querySelectorAll("h1, h2, h3, h4"))
-      .filter(h => isElementVisible(h) && !h.closest("#voicedom-extension-overlay"))
-      .map(h => (h.innerText || "").trim())
-      .filter(t => t.length > 2 && t.length < 90)
-      .slice(0, 8);
 
     const interactiveQuery = `
       button, 
       a[href], 
-      a,
-      input, 
+      input:not([type="hidden"]), 
       select, 
       textarea, 
       [role="button"], 
@@ -411,86 +406,92 @@
       [role="tab"], 
       [role="link"],
       [onclick],
-      .btn,
-      [class*="btn-" i],
-      [class*="button" i]
+      .btn
     `;
 
     const rawElements = Array.from(document.querySelectorAll(interactiveQuery));
     let counter = 1;
-    const elements = [];
-    const modalElements = [];
-    const pageElements = [];
+    const scoredList = [];
+    const queryTokens = (userQuery || "").toLowerCase().split(/\s+/).filter(t => t.length > 2);
 
     for (const el of rawElements) {
       if (!isElementVisible(el)) continue;
       if (el.closest("#voicedom-extension-overlay")) continue;
+      if (el.disabled || el.getAttribute("aria-disabled") === "true") continue;
 
       let id = el.id;
       if (!id) {
-        id = `vdom-el-${counter++}`;
-        el.setAttribute("data-vdom-id", id);
+        id = el.getAttribute("data-vdom-id");
+        if (!id) {
+          id = `vdom-el-${counter++}`;
+          el.setAttribute("data-vdom-id", id);
+        }
       }
 
       const tag = el.tagName.toLowerCase();
       const type = (el.getAttribute("type") || "").toLowerCase();
-      let text = (el.innerText || el.textContent || "").trim().slice(0, 80);
+      let text = (el.innerText || el.textContent || "").trim().slice(0, 50);
 
       let associatedLabel = "";
       if (tag === "input" && (type === "checkbox" || type === "radio")) {
         if (el.id) {
           const lbl = document.querySelector(`label[for="${el.id}"]`);
-          if (lbl) associatedLabel = (lbl.innerText || "").trim();
+          if (lbl) associatedLabel = (lbl.innerText || "").trim().slice(0, 50);
         }
         if (!associatedLabel && el.parentElement) {
-          associatedLabel = (el.parentElement.innerText || "").trim();
-        }
-        if (!associatedLabel && el.nextElementSibling) {
-          associatedLabel = (el.nextElementSibling.innerText || el.nextElementSibling.textContent || "").trim();
+          associatedLabel = (el.parentElement.innerText || "").trim().slice(0, 50);
         }
       }
 
-      const href = el.getAttribute("href") || (el.closest("a") ? el.closest("a").getAttribute("href") : "");
-      const ariaLabel = el.getAttribute("aria-label") || "";
-      const placeholder = el.getAttribute("placeholder") || "";
-      const name = el.getAttribute("name") || "";
-      const currentValue = (tag === "input" || tag === "textarea" || tag === "select") ? (el.value || "") : "";
+      const ariaLabel = (el.getAttribute("aria-label") || "").trim().slice(0, 50);
+      const placeholder = (el.getAttribute("placeholder") || "").trim().slice(0, 35);
+      const name = (el.getAttribute("name") || "").trim().slice(0, 35);
+      const currentValue = (tag === "input" || tag === "textarea" || tag === "select") ? (el.value || "").slice(0, 35) : "";
       const isChecked = el.checked === true || el.getAttribute("aria-checked") === "true";
-      const isDisabled = el.disabled === true || el.getAttribute("aria-disabled") === "true";
       const inModal = trueModal ? trueModal.contains(el) : false;
       const selector = el.id ? `#${el.id}` : `[data-vdom-id="${id}"]`;
 
-      const item = {
-        id,
-        tag,
-        type,
-        text: text || associatedLabel,
-        value: currentValue || undefined,
-        href: href || undefined,
-        ariaLabel,
-        placeholder,
-        name,
-        isChecked,
-        isDisabled,
-        inModal,
-        selector
-      };
+      const finalLabel = text || associatedLabel || ariaLabel || placeholder || name;
+      if (!finalLabel && tag === "a") continue;
 
-      if (inModal) {
-        modalElements.push(item);
-      } else {
-        pageElements.push(item);
+      // Relevance score
+      let score = 0;
+      if (inModal) score += 50;
+
+      const rect = el.getBoundingClientRect();
+      const inViewport = rect.top < window.innerHeight && rect.bottom > 0 && rect.left < window.innerWidth && rect.right > 0;
+      if (inViewport) score += 15;
+
+      const fullSearchStr = `${finalLabel} ${name} ${placeholder}`.toLowerCase();
+      for (const tok of queryTokens) {
+        if (fullSearchStr.includes(tok)) score += 30;
       }
+
+      // Compact payload format
+      const compactItem = {
+        selector,
+        tag: tag === "a" ? "link" : tag,
+        label: finalLabel.slice(0, 45)
+      };
+      if (type && type !== "button" && type !== "submit") compactItem.type = type;
+      if (placeholder) compactItem.placeholder = placeholder;
+      if (name) compactItem.name = name;
+      if (currentValue) compactItem.value = currentValue;
+      if (isChecked) compactItem.checked = true;
+
+      scoredList.push({ item: compactItem, score, inModal });
     }
 
-    const combinedElements = [...modalElements, ...pageElements].slice(0, 65);
+    scoredList.sort((a, b) => b.score - a.score);
+
+    // Limit to top 25 high-priority elements (~500 tokens total)
+    const elements = scoredList.slice(0, 25).map(s => s.item);
 
     return {
-      title: document.title,
-      url: window.location.href,
+      title: (document.title || "").slice(0, 60),
+      url: window.location.pathname,
       hasActiveModal: !!trueModal,
-      headings,
-      elements: combinedElements
+      elements
     };
   }
 
@@ -752,41 +753,8 @@
     stopListening();
 
     inputEl.value = cleanQuery;
-    statusBox.innerText = "⚡ Qwen Analyzing...";
-    const snapshot = getDOMSnapshot();
-
-    const recentHistoryText = conversationHistory.slice(-4).map(h => `${h.role === 'user' ? 'User' : 'Assistant'}: "${h.content}"`).join("\n");
-
-    const systemPrompt = `You are Cipher (Cipher_Jarvis): an autonomous Universal Web Navigation & Form Autopilot.
-Active Page: "${snapshot.title}" (${snapshot.url})
-Modal Active: ${snapshot.hasActiveModal ? "YES" : "NO"}
-Interactive Elements on page: ${JSON.stringify(snapshot.elements)}
-
-RECENT CONVERSATION HISTORY:
-${recentHistoryText || "No previous turns"}
-
-RULES FOR FORM FILLING & REPLACEMENT:
-1. AUTO_FILL & REPLACEMENT:
-   - When user gives a name (e.g. "My name is Jesus Christ" or "Aryan Samadder" or "Change name to Rahul"):
-   - If page has separate "First name" and "Last name" fields (or inputs named fname/lname/first/last):
-     Map and REPLACE both fields: {"formData": {"first": "<first_name>", "last": "<last_name>"}}
-   - If page has a single "name" field: {"formData": {"name": "<full_name>"}}
-   - If user gives email, password, city, or phone, map to appropriate form fields to overwrite/replace.
-2. CLICK or NAVIGATE for buttons/links.
-3. READ SCREEN / READ PAGE (only when user asks to read).
-4. WHERE IS X / FIND X (locate and scroll).
-
-Return STRICT JSON ONLY:
-{
-  "type": "AUTO_FILL" | "TYPE" | "CLICK" | "NAVIGATE" | "LOCATE_ELEMENT" | "READ_PAGE" | "SCROLL" | "UNKNOWN",
-  "selector": "<css selector or null>",
-  "targetUrl": "<url or null>",
-  "label": "<label or null>",
-  "value": "<text or null>",
-  "formData": {"first": "val", "last": "val", "email": "val"} | null,
-  "direction": "UP" | "DOWN" | null,
-  "reply": "<short confirmation in user's spoken language>"
-}`;
+    statusBox.innerText = "⚡ Thinking...";
+    const snapshot = getDOMSnapshot(cleanQuery);
 
     try {
       let activeKey = GROQ_API_KEY;
@@ -796,30 +764,65 @@ Return STRICT JSON ONLY:
           if (stored?.GROQ_API_KEY) activeKey = stored.GROQ_API_KEY;
         } catch (_) {}
       }
-      if (!activeKey && typeof window !== "undefined" && window.__VOICEDOM_API_KEY) {
-        activeKey = window.__VOICEDOM_API_KEY;
+      if (!activeKey && typeof window !== "undefined" && window.CIPHER_LOCAL_KEY) {
+        activeKey = window.CIPHER_LOCAL_KEY;
       }
       if (!activeKey) {
-        setStatus("⚠️ Please enter your Groq API Key in Cipher Extension popup", false);
+        statusBox.innerText = "⚠️ Please set Groq API Key in Cipher popup";
         return;
       }
 
-      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${activeKey}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: GROQ_MODEL,
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: query }
-          ],
-          temperature: 0.1,
-          response_format: { type: "json_object" }
-        })
-      });
+      async function requestInference(model, elements) {
+        const prompt = `You are Cipher: autonomous Web Navigation & Form Autopilot.
+Page: "${snapshot.title}" (${snapshot.url})
+Modal Open: ${snapshot.hasActiveModal ? "YES" : "NO"}
+Interactive Elements:
+${JSON.stringify(elements)}
+
+User Command: "${cleanQuery}"
+
+Return strict JSON object with:
+{
+  "type": "CLICK" | "TYPE" | "AUTO_FILL" | "SCROLL" | "READ_PAGE" | "LOCATE_ELEMENT" | "UNKNOWN",
+  "selector": "<css selector or null>",
+  "targetUrl": "<url or null>",
+  "label": "<label or null>",
+  "value": "<text or null>",
+  "formData": null,
+  "direction": "UP" | "DOWN" | null,
+  "reply": "<short spoken confirmation in user's language>"
+}`;
+
+        return fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${activeKey}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: [
+              { role: "system", content: "You are Cipher AI assistant. Return valid json format." },
+              { role: "user", content: prompt }
+            ],
+            temperature: 0.1,
+            response_format: { type: "json_object" }
+          })
+        });
+      }
+
+      // 1. Primary inference with compact elements (<600 tokens)
+      let res = await requestInference(GROQ_MODEL, snapshot.elements);
+
+      // 2. Resilient fallback if 413 (Payload too large) or 429 (Rate limit)
+      if (res.status === 413 || res.status === 429) {
+        statusBox.innerText = "⚡ Adapting request...";
+        const topElements = snapshot.elements.slice(0, 12);
+        res = await requestInference("openai/gpt-oss-20b", topElements);
+        if (!res.ok) {
+          res = await requestInference(GROQ_MODEL, topElements);
+        }
+      }
 
       if (res.ok) {
         const data = await res.json();
@@ -829,7 +832,7 @@ Return STRICT JSON ONLY:
 
         conversationHistory.push({ role: "user", content: query });
         conversationHistory.push({ role: "assistant", content: parsed.reply || "Done" });
-        if (conversationHistory.length > 8) conversationHistory.splice(0, conversationHistory.length - 8);
+        if (conversationHistory.length > 6) conversationHistory.splice(0, conversationHistory.length - 6);
         
         if (parsed.type !== "READ_PAGE") {
           statusBox.innerText = `✅ ${parsed.reply || "Action Completed"}`;
@@ -843,12 +846,12 @@ Return STRICT JSON ONLY:
         statusBox.innerText = `⚠️ AI error (${res.status})`;
       }
     } catch (e) {
-      console.error("VoiceDOM process error:", e);
+      console.error("Cipher process error:", e);
       statusBox.innerText = "⚠️ Connection error";
     } finally {
       setTimeout(() => {
         isProcessing = false;
-      }, 1000);
+      }, 800);
     }
   }
 
