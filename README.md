@@ -1,210 +1,134 @@
-﻿# 🌾 KrishiLink: Multilingual AI Voice Navigation & Agri-Commerce Platform
+﻿# 🎙️ VoiceDOM: Universal Multilingual AI Voice Navigation, Form Autopilot & Web Accessibility Suite
 
-> **🏆 Built for Major League Hacking (MLH) — Best Open-Source AI Project Challenge**  
-> _An accessibility-first, voice-controlled agritech ecosystem powered by open-weight models: **OpenAI Whisper Large v3** (Speech-to-Text) and **Qwen 2.5/3.8** (Multilingual LLM Reasoning)._
+> **An Open-Source Web Accessibility & Agentic Automation Engine that works on ANY website on the internet.** Powered by **Whisper Large v3** and **Qwen 2.5 / 3.8-27B** via high-speed inference.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](https://opensource.org/licenses/MIT)
-[![Whisper STT](https://img.shields.io/badge/STT-Whisper%20Large%20v3-orange.svg)](https://github.com/openai/whisper)
-[![Qwen LLM](https://img.shields.io/badge/LLM-Qwen%202.5%20%2F%203.8--27B-blue.svg)](https://github.com/QwenLM/Qwen2.5)
-[![Next.js 16](https://img.shields.io/badge/Next.js-16.3-black.svg)](https://nextjs.org/)
-[![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL%20%2F%20Neon-336791.svg)](https://neon.tech/)
-[![Prisma ORM](https://img.shields.io/badge/ORM-Prisma-2D3748.svg)](https://www.prisma.io/)
-[![Groq Inference](https://img.shields.io/badge/Inference-Groq%20LPU-F55036.svg)](https://groq.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](LICENSE)
+[![Manifest V3](https://img.shields.io/badge/Chrome%20Extension-Manifest%20V3-blue.svg)](packages/extension)
+[![Open Source AI](https://img.shields.io/badge/Open--Source%20AI-Whisper%20v3%20%2B%20Qwen%202.5-purple.svg)](SKILL.md)
 
 ---
 
-## 📌 Table of Contents
+## 🌟 What is VoiceDOM?
 
-- [💡 Problem & Mission](#-problem--mission)
-- [🤖 Open-Source / Open-Weight AI Architecture](#-open-source--open-weight-ai-architecture)
-  - [1. Speech Recognition (STT): OpenAI Whisper Large v3](#1-speech-recognition-stt-openai-whisper-large-v3)
-  - [2. Conversational Reasoning & Parsing: Qwen 2.5 / 3.8](#2-conversational-reasoning--parsing-qwen-25--38)
-- [🎙️ Voice Assistant Capabilities](#️-voice-assistant-capabilities)
-- [🌐 Multi-Dialect Spoken Cheat Sheet](#-multi-dialect-spoken-cheat-sheet)
-- [🚜 Platform Modules & User Roles](#-platform-modules--user-roles)
-- [🏗️ Technical Architecture](#️-technical-architecture)
-- [🚀 Getting Started & Local Development](#-getting-started--local-development)
-- [☁️ Cloud Deployment on Vercel](#️-cloud-deployment-on-vercel)
-- [📜 License & Standards](#-license--standards)
+Instead of requiring web developers to hardcode voice commands or configure hundreds of route intents for every single page, **VoiceDOM** dynamically scans the live DOM accessibility tree on **ANY webpage** and uses an open-weight reasoning model to execute native mouse clicks, auto-fill complex multi-step forms across regional dialects, find & scroll to on-screen elements, and read page instructions out loud.
+
+VoiceDOM comes in **3 unified formats**:
+1. 🌐 **Universal Browser Extension (Manifest V3)**: Install once in Chrome/Edge/Brave and navigate *any* website (Amazon, Wikipedia, Government Portals, University Portals).
+2. 📝 **Autonomous VoiceForm Autopilot**: 1-sentence continuous multi-field entity extraction and filling with conversational memory.
+3. 📦 **1-Line Drop-in Web SDK**: `<script src="voicedom.js"></script>` or React widget for web developers.
 
 ---
 
-## 💡 Problem & Mission
+## 🚀 Quickstart: Running the Browser Extension
 
-India is home to over **140 million agricultural producers**, yet a vast majority face steep digital exclusion due to:
+### 1️⃣ Open Chrome Extensions
+1. Open Google Chrome, Brave, or Microsoft Edge.
+2. In your address bar, go to:
+   ```
+   chrome://extensions
+   ```
 
-- **Complex UI Forms**: Text-heavy dropdowns, filters, and tables that are challenging for semi-literate rural users.
-- **Password Barriers**: Cumbersome password recovery, special character rules, and authentication friction.
-- **Language Barriers**: Most platforms prioritize English, neglecting regional dialects like **Bengali** and **Marathi**.
+### 2️⃣ Turn On Developer Mode
+- Toggle the **"Developer mode"** switch in the top right corner to **ON**.
 
-**KrishiLink** bridges this accessibility divide through an autonomous, **zero-password, multilingual AI voice navigation system**. Farmers, buyers, and transporters can trade produce, negotiate quotes, and coordinate logistics entirely using their spoken natural language.
+### 3️⃣ Load Unpacked Extension
+1. Click the **"Load unpacked"** button in the top left.
+2. Navigate inside the project and select the **`packages/extension`** folder:
+   ```
+   Site_Reader/packages/extension
+   ```
+3. Click **Select Folder**.
+
+### 4️⃣ Open Any Website & Start Navigating!
+Open any website (e.g. `https://amazon.in`, `https://wikipedia.org`, `https://goaps.iitm.ac.in`) — the VoiceDOM floating bar will appear in the bottom right corner ready for voice or typed commands!
 
 ---
 
-## 🤖 Open-Source / Open-Weight AI Architecture
+## 🎬 Running the Live Interactive Showcase Demo
 
-KrishiLink combines **OpenAI Whisper Large v3** for speech recognition with **Qwen 2.5 / 3.8** for multi-dialect reasoning and slot-filling:
+VoiceDOM includes a pre-built 3-in-1 interactive showcase (E-Commerce Store, Multi-Step KYC Form, and Agritech Portal):
 
+```powershell
+cd Site_Reader
+npx serve demo
 ```
- ┌──────────────────────────────────────────────────────────┐
- │                   Spoken Voice Audio                     │
- │          (English, বাংলা / Bengali, मराठी / Marathi)       │
- └────────────────────────────┬─────────────────────────────┘
-                              │
-                              ▼
- ┌──────────────────────────────────────────────────────────┐
- │  Speech-to-Text Engine: OpenAI Whisper Large v3 (Groq)   │
- │  • Multilingual Indic phoneme & dialect transcription    │
- │  • Continuous audio streaming with 1200ms debounce       │
- └────────────────────────────┬─────────────────────────────┘
-                              │
-                              ▼
- ┌──────────────────────────────────────────────────────────┐
- │  Open-Weight Reasoning LLM: Qwen 2.5 / Qwen 3.8-27B      │
- │  • Zero-shot Multilingual Intent Classification          │
- │  • Dialect Script Normalization (বাংলা / मराठी)          │
- │  • Context-Aware Dynamic Slot Filling                    │
- └────────────────────────────┬─────────────────────────────┘
-                              │
-              ┌───────────────┴───────────────┐
-              ▼                               ▼
- ┌─────────────────────────┐     ┌─────────────────────────┐
- │  Subpage State Machine  │     │   On-Screen OTP Engine  │
- │  (Tabs, Portals, DB)    │     │   (Zero-Password Auth)  │
- └─────────────────────────┘     └─────────────────────────┘
-```
-
-### 1. Speech Recognition (STT): OpenAI Whisper Large v3
-
-- **Model**: `openai/whisper-large-v3` / `whisper-large-v3-turbo` via Groq LPU.
-- **Where it is used**: [`Voice_Nav/backend/app/services/speech_service.py`](./Voice_Nav/backend/app/services/speech_service.py) and audio ingestion pipeline.
-- **Role**: High-precision multilingual audio transcription across noisy rural environments and low-resource Indic speech (Bengali, Marathi, and Hinglish/Banglish).
-- **Latency**: Sub-300ms ultra-fast transcription speed.
-
-### 2. Conversational Reasoning & Parsing: Qwen 2.5 / 3.8
-
-- **Model**: `qwen/qwen3.8-27b` / `Qwen2.5`.
-- **Where it is used**: [`SIH/src/app/api/assistant/command/route.ts`](./SIH/src/app/api/assistant/command/route.ts) and [`Voice_Nav/backend/app/services/intent_engine.py`](./Voice_Nav/backend/app/services/intent_engine.py).
-- **Role**:
-  - High-accuracy native script tokenization for Bengali (`বাংলা`) and Devanagari (`मराठी`).
-  - Translates regional numeric expressions and glyphs (e.g. `৫ ৮ ২ ৯` or `५ ८ २ ९` -> `5829`) into verified OTP tokens.
-  - Contextual intent classification (`NAVIGATE`, `FILL_FORM`, `SEND_OTP`, `CHANGE_LANGUAGE`, `LOGOUT`).
+Open `http://localhost:3000` (or `http://localhost:5000`) in your browser.
 
 ---
 
-## 🎙️ Voice Assistant Capabilities
+## 🔑 Environment Variables & Configuration
 
-- **Passwordless Voice Onboarding**: Enter phone number -> say _"Send OTP"_ -> visual on-screen OTP code appears -> say _"My OTP is [code]"_ -> instantly authenticate.
-- **Deep Subpage Tab Switching**: Directly jump to internal sub-tabs like _"My Active Bids"_, _"Secured Contracts"_, _"Produce Listings"_, _"Available Cargo Jobs"_, or _"Escrow Ledger"_.
-- **Live Multilingual Translation**: Instant UI dialect switching (`EN | मराठी | বাংলা`) via conversational voice trigger or top-bar control.
-- **Voice-Driven Logout**: Say _"Log out"_, _"লগআউট করো"_, or _"लॉग आउट करा"_ to cleanly terminate sessions and reset state.
-
----
-
-## 🌐 Multi-Dialect Spoken Cheat Sheet
-
-| Action              | English Voice Command      | বাংলা (Bengali)                     | मराठी (Marathi)             |
-| :------------------ | :------------------------- | :---------------------------------- | :-------------------------- |
-| **Send OTP**        | _"Send OTP"_               | _"ওটিপি পাঠাও"_                     | _"ओटीपी पाठवा"_             |
-| **Confirm OTP**     | _"OTP is 5829"_            | _"ওটিপি কোড হলো ৫ ৮ ২ ৯"_           | _"माझा ओटीपी ५ ८ २ ९ आहे"_  |
-| **Farmer Portal**   | _"Open Farmer View"_       | _"কৃষক পেজে যাও"_                   | _"शेतकरी पृष्ठावर जा"_      |
-| **Cargo Jobs**      | _"Available cargo jobs"_   | _"পরিবহন কাজ দেখাও"_                | _"उपलब्ध वाहतूक कामे"_      |
-| **Active Bids**     | _"My active bids"_         | _"আমার সক্রিয় দরপত্র"_             | _"माझ्या सक्रिय बोली"_      |
-| **Language Switch** | _"Switch page to Marathi"_ | _"পেজের ভাষা বাংলায় পরিবর্তন করো"_ | _"पृष्ठ भाषा इंग्रजीत करा"_ |
-| **Logout**          | _"Log me out"_             | _"লগআউট করুন"_                      | _"बाहेर पडा"_               |
-
----
-
-## 🚜 Platform Modules & User Roles
-
-### 🌾 1. Farmer Portal (`/farmer`)
-
-- **Produce Listing Engine**: List crop commodity, variety, weight (quintals), quality grade, and minimum reserve price.
-- **Live Mandi Price Integration**: Real-time mandi benchmark rates fetched dynamically via `api.data.gov.in`.
-- **Bid Negotiation**: Accept, reject, or counter buyer offers in real time.
-
-### 🛒 2. Buyer Portal (`/buyer`)
-
-- **Produce Discovery**: Search and filter lots by commodity, distance, price range, and seller rating.
-- **Escrow-Backed Bids**: Place competitive bids on active lots with transparent platform fee breakdowns.
-
-### 🚛 3. Transporter Portal (`/transporter`)
-
-- **Logistics Matching**: Real-time load matching with support for **Shared (Consolidated)** and **Dedicated** freight modes.
-- **Dynamic Freight Bidding**: Submit freight quotes based on per-km rates, vehicle capacity, and estimated ETA.
-
-### 🛠️ 4. Admin Console (`/admin`)
-
-- Platform-wide transaction ledger, user verification, dispute resolution matrix, and reliability scoring.
-
----
-
-## 🏗️ Technical Architecture
-
-- **Frontend**: Next.js 16 (App Router), React 19, Tailwind CSS, Lucide Icons, Recharts.
-- **Speech-to-Text (STT)**: **OpenAI Whisper Large v3** (`whisper-large-v3` / `whisper-large-v3-turbo`) via Groq LPU + Web Speech continuous streaming.
-- **LLM Reasoning**: **Qwen 2.5 / 3.8-27B** (`qwen/qwen3.8-27b`) for multilingual intent & slot extraction.
-- **Database**: PostgreSQL (Serverless via Neon DB) managed with Prisma ORM.
-- **Authentication**: Zero-password Phone + On-Screen Dynamic OTP verification.
-- **Translation**: Google Translate API + Multilingual React Context (`LanguageContext`).
-
----
-
-## 🚀 Getting Started & Local Development
-
-### Prerequisites
-
-- Node.js 18+ and npm
-- PostgreSQL database instance (or a free [Neon DB](https://neon.tech/) connection)
-- Groq API Key ([Get a free key here](https://console.groq.com/))
-
-### 1. Clone Repository
+Copy `.env.example` to `.env` to configure your API keys and model parameters:
 
 ```bash
-git clone https://github.com/Aryan-Samadder-07/SIH_voice_Nav.git
-cd SIH_voice_Nav/SIH
+cp .env.example .env
 ```
 
-### 2. Install Dependencies
-
-```bash
-npm install
-```
-
-### 3. Configure Environment Variables
-
-Create a `.env` file in the `SIH/` directory:
-
-```env
-DATABASE_URL="postgresql://username:password@host/neondb?sslmode=require"
-GROQ_API_KEY="your-groq-api-key"
-GROQ_LLM_MODEL="qwen/qwen3.8-27b"
-GROQ_WHISPER_MODEL="whisper-large-v3"
-DATA_GOV_IN_API_KEY="your-optional-data-gov-in-api-key"
-```
-
-### 4. Push Database Schema & Run
-
-```bash
-npx prisma db push
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `GROQ_API_KEY` | *(Built-in Demo Key)* | Groq API Key for zero-latency open-weight model inference |
+| `GROQ_MODEL` | `qwen/qwen3.8-27b` | Open-weight reasoning model for DOM perception |
+| `WHISPER_MODEL` | `whisper-large-v3` | Speech-to-Text model for regional Indic dialect recognition |
+| `DEFAULT_LANGUAGE` | `en` | Default UI language (`en`, `bn`, `mr`, `hi`) |
+| `ENABLE_RADAR_HIGHLIGHT` | `true` | Visual glowing emerald radar pulse on targeted elements |
 
 ---
 
-## ☁️ Cloud Deployment on Vercel
+## 🗣️ Supported Commands & Features
 
-1. Import the repository `https://github.com/Aryan-Samadder-07/SIH_voice_Nav` on [Vercel](https://vercel.com/).
-2. Select **`SIH`** as the project root directory.
-3. Add the environment variables (`DATABASE_URL`, `GROQ_API_KEY`, `GROQ_LLM_MODEL`, `DATA_GOV_IN_API_KEY`).
-4. Click **Deploy**. Vercel will build and deploy the application with zero additional configuration needed.
+| Feature | Example Commands (Voice or Typed) | Action Performed |
+| :--- | :--- | :--- |
+| **Navigation & Clicks** | *"Apply now"*, *"Important dates"*, *"Add wheat to cart"* | Finds matching button/link and triggers native click |
+| **Visual Finder ("Where is X?")** | *"Where is the continue button"*, *"Find the checkbox"* | Smoothly scrolls to target element and pins radar badge |
+| **Multi-Turn Form Autopilot** | *"My name is Aryan Samadder, email is aryan@gmail.com"* | Auto-splits and fills first name, last name, and email |
+| **Checkbox / Terms Agreement** | *"I agree to terms"*, *"I have read and understood instructions"* | Toggles React-safe checkbox state |
+| **Universal Screen Reader** | *"Read page"*, *"Read instructions"*, or click **`🔊 Read`** | Reads out page/modal text using native Speech Synthesis |
+| **Multilingual Dialects** | *"আমার নাম আর্যন"*, *"माझे नाव आर्यन आहे"* | Native entity extraction across English, Bengali, Marathi, Hindi |
 
 ---
 
-## 📜 License & Standards
+## 📂 Project Architecture
 
-- **License**: Distributed under the **[MIT License](./LICENSE)**.
-- **Agent Specification**: Compliant with the **[Agent Skill Open Standard](./SKILL.md)**.
-- **Author**: Aryan Samadder ([@Aryan-Samadder-07](https://github.com/Aryan-Samadder-07))
+```
+Site_Reader/
+├── packages/
+│   ├── core/                     # 🧠 AI DOM Perception & Action Execution Engine
+│   │   ├── src/
+│   │   │   ├── types.ts          # Action contracts & DOM schemas
+│   │   │   ├── domScanner.ts     # Z-index modal & interactive element perception
+│   │   │   ├── actionExecutor.ts # Synthetic event bubbling & radar pin animator
+│   │   │   ├── speechPipeline.ts # Continuous audio streaming & debounce buffer
+│   │   │   ├── aiEngine.ts       # Qwen 2.5/3.8 + Whisper reasoning kernel
+│   │   │   └── index.ts
+│   │   └── package.json
+│   │
+│   ├── sdk/                      # 📦 1-Line Drop-in Web SDK (<script> & React)
+│   │   ├── src/
+│   │   │   ├── widget.ts         # Glassmorphic floating AI Voice Orb
+│   │   │   └── index.ts          # Standalone CDN bundle entry
+│   │   └── package.json
+│   │
+│   └── extension/                # 🌐 Universal Browser Extension (Manifest V3)
+│       ├── manifest.json         # Chrome Extension Manifest V3 configuration
+│       ├── background.js         # Service worker
+│       ├── popup.html            # Extension popup UI
+│       ├── popup.js              # Popup control scripts
+│       ├── content.js            # Injected agentic AI content script
+│       └── README.md             # Extension installation guide
+│
+├── demo/                         # 🎬 Multi-Tab Interactive Pitch Showcase
+│   ├── index.html                # E-Commerce, KYC Form & Agritech tabs
+│   └── style.css                 # Modern dark glassmorphism styling
+│
+├── .env.example                  # Environment configuration template
+├── SKILL.md                      # Agent Skill Open Standard Specification
+├── LICENSE                       # MIT License
+├── package.json                  # Standalone monorepo manifest
+└── README.md                     # Master Documentation
+```
+
+---
+
+## ⚖️ License
+
+Distributed under the **MIT License**. See [LICENSE](LICENSE) for more information.

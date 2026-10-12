@@ -1,0 +1,154 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VoiceDOM Live Showcase | Universal Voice Navigation</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="nav-container">
+      <div class="logo">
+        <span>🎙️</span>
+        <span>VoiceDOM Showcase</span>
+      </div>
+      <div class="tab-nav">
+        <button class="tab-btn active" id="tab-btn-shop" onclick="switchDemoTab('shop')">🛒 E-Commerce</button>
+        <button class="tab-btn" id="tab-btn-kyc" onclick="switchDemoTab('kyc')">📝 Form Autopilot</button>
+        <button class="tab-btn" id="tab-btn-agri" onclick="switchDemoTab('agri')">🌾 Agritech Portal</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="hero-banner">
+      <h1>Universal Voice Web Navigation in Action</h1>
+      <p>Click "Speak" on the bottom-right VoiceDOM widget and speak in <strong>English</strong>, <strong>বাংলা (Bengali)</strong>, or <strong>मराठी (Marathi)</strong>!</p>
+    </div>
+
+    <!-- Tab 1: E-Commerce Store -->
+    <div class="demo-tab-content active" id="demo-shop">
+      <div class="prompt-tip">
+        💡 <strong>Try saying:</strong> <em>"Add organic wheat to cart"</em>, <em>"Click fresh tomatoes"</em>, or <em>"Scroll down"</em>.
+      </div>
+      <div class="product-grid">
+        <div class="product-card">
+          <div>
+            <div class="product-title">Organic Wheat (Grade A)</div>
+            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">Nashik Farm Direct - 50kg bag</p>
+            <div class="product-price">₹2,450</div>
+          </div>
+          <button class="btn-action" id="btn-wheat-cart">Add to Cart</button>
+        </div>
+
+        <div class="product-card">
+          <div>
+            <div class="product-title">Fresh Red Tomatoes</div>
+            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">Pune Wholesale Lot - 100kg</p>
+            <div class="product-price">₹1,800</div>
+          </div>
+          <button class="btn-action" id="btn-tomato-cart">Add to Cart</button>
+        </div>
+
+        <div class="product-card">
+          <div>
+            <div class="product-title">Premium Basmati Rice</div>
+            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">Aged 2 Years - 25kg bag</p>
+            <div class="product-price">₹3,200</div>
+          </div>
+          <button class="btn-action" id="btn-rice-cart">Add to Cart</button>
+        </div>
+
+        <div class="product-card">
+          <div>
+            <div class="product-title">Organic Soybean Seeds</div>
+            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">High Yield Variety - 40kg</p>
+            <div class="product-price">₹4,100</div>
+          </div>
+          <button class="btn-action" id="btn-soybean-cart">Add to Cart</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: Form Autopilot -->
+    <div class="demo-tab-content" id="demo-kyc">
+      <div class="prompt-tip">
+        💡 <strong>Try saying in one sentence:</strong> <em>"My name is Ramesh Kumar, mobile 9876543210, I live in Pune and want to register as farmer"</em> or in Bengali <em>"আমার নাম রমেশ, মোবাইল 9876543210"</em>.
+      </div>
+      <div class="form-card">
+        <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 20px; color: #10b981;">Universal Registration Form</h2>
+        <form id="kyc-form" onsubmit="event.preventDefault(); alert('Form Submitted via VoiceDOM!');">
+          <div class="form-group">
+            <label for="user-full-name">Full Name</label>
+            <input type="text" id="user-full-name" name="name" class="form-control" placeholder="e.g. Ramesh Kumar">
+          </div>
+
+          <div class="form-group">
+            <label for="user-phone">Mobile Phone</label>
+            <input type="tel" id="user-phone" name="phone" class="form-control" placeholder="10-digit mobile number">
+          </div>
+
+          <div class="form-group">
+            <label for="user-city">City / District</label>
+            <input type="text" id="user-city" name="city" class="form-control" placeholder="e.g. Nashik, Pune, Kolkata">
+          </div>
+
+          <div class="form-group">
+            <label for="user-role-select">Platform Role</label>
+            <select id="user-role-select" name="role" class="form-control">
+              <option value="farmer">Farmer</option>
+              <option value="buyer">Buyer / Wholesaler</option>
+              <option value="transporter">Logistics Transporter</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn-action" style="width: 100%; margin-top: 12px;" id="btn-submit-registration">
+            Submit Registration
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Tab 3: Agritech Portal -->
+    <div class="demo-tab-content" id="demo-agri">
+      <div class="prompt-tip">
+        💡 <strong>Try saying:</strong> <em>"Show live mandi rates"</em> or <em>"Calculate freight logistics"</em>.
+      </div>
+      <div class="product-grid">
+        <div class="product-card">
+          <div class="product-title">📊 Live Mandi Market Prices</div>
+          <p style="font-size: 13px; color: #94a3b8; margin: 8px 0 16px 0;">Track real-time commodity prices from APMC markets across India.</p>
+          <button class="btn-action" id="btn-mandi-rates" onclick="alert('Viewing Mandi Rates!')">View Mandi Rates</button>
+        </div>
+
+        <div class="product-card">
+          <div class="product-title">🚛 Freight Logistics Matcher</div>
+          <p style="font-size: 13px; color: #94a3b8; margin: 8px 0 16px 0;">Find consolidated and dedicated cargo trucks for produce transport.</p>
+          <button class="btn-action" id="btn-freight-calc" onclick="alert('Viewing Logistics Jobs!')">Find Trucks</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function switchDemoTab(tabKey) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.demo-tab-content').forEach(c => c.classList.remove('active'));
+
+      document.getElementById('tab-btn-' + tabKey)?.classList.add('active');
+      document.getElementById('demo-' + tabKey)?.classList.add('active');
+    }
+
+    document.querySelectorAll('.btn-action').forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.innerText = '✅ Done!';
+        setTimeout(() => { btn.innerText = btn.getAttribute('data-orig') || 'Add to Cart'; }, 2000);
+      });
+    });
+  </script>
+
+  <!-- Embed Core VoiceDOM Autonomous Agent Widget -->
+  <script src="../packages/extension/content.js"></script>
+</body>
+</html>

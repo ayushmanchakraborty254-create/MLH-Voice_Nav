@@ -1,0 +1,22 @@
+﻿{
+  "manifest_version": 3,
+  "name": "VoiceDOM - Universal AI Voice Web Navigator",
+  "version": "1.0.0",
+  "description": "Navigate and auto-fill any website on the internet using multilingual voice commands powered by Whisper & Qwen 2.5/3.8.",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "VoiceDOM Assistant"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

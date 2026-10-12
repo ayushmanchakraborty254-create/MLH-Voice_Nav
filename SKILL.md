@@ -1,43 +1,26 @@
----
-name: multilingual-voice-navigator
+﻿---
+name: voicedom-universal-navigator
 version: 1.0.0
-description: Agent skill for real-time multilingual voice navigation, form slot-filling, and UI state orchestration using open-weight LLMs.
+description: Universal agent skill for autonomous multilingual DOM perception, voice-driven element interaction, and continuous multi-field form auto-filling across any web page.
 author: Aryan Samadder
 license: MIT
 compatibility:
-  frameworks: ["Next.js", "React", "FastAPI"]
-  models: ["Qwen/Qwen2.5", "Qwen/Qwen3.8-27b", "meta-llama/Llama-3.3-70B-Instruct", "openai/whisper-large-v3-turbo"]
+  frameworks: ["React", "Next.js", "Vue", "Vanilla JS", "Chrome Extensions"]
+  models: ["openai/whisper-large-v3", "qwen/qwen3.8-27b", "Qwen/Qwen2.5", "meta-llama/Llama-3.3-70B-Instruct"]
 ---
 
-# Multilingual Voice Navigation & UI Orchestration Agent Skill
+# VoiceDOM Agent Skill Specification
 
-An autonomous agent skill enabling voice-driven, passwordless navigation and transaction handling across regional languages (**Bengali**, **Marathi**, and **English**).
+An autonomous open-weight agent skill compliant with the **Agent Skill Open Standard**. It enables software agents and end users to perceive, navigate, and execute transactions on any DOM accessibility tree in English, Bengali (বাংলা), Marathi (मराठी), and Hindi (हिन्दी).
 
-## 🧠 Model Architecture & Harness
-- **Open-Weight Reasoning Core**: Powered by open-weight LLMs (`Qwen` / `Llama-3.3`) for zero-shot intent classification and slot extraction.
-- **Speech-to-Text Pipeline**: Web Speech API with continuous streaming and natural pause debounce (1200ms) + Whisper open-weights fallback.
-- **State Machine Integration**: Bidirectional custom DOM events (`custom:form_update`, `custom:send_otp`, `custom:form_state_cleared`) to synchronize UI states with model outputs.
+## 🧠 Core Architecture
+- **Speech Engine**: OpenAI Whisper Large v3 (sub-300ms transcription).
+- **Perception Kernel**: Autonomous DOM tree scanner mapping interactive nodes into structured JSON tokens.
+- **Reasoning Core**: Qwen 2.5/3.8 open-weights for multilingual intent classification and dynamic slot filling.
 
-## 🎯 Supported Agent Actions
-1. `NAVIGATE`: Contextual portal routing (`/farmer`, `/buyer`, `/transporter`, `/admin`) and internal sub-tab switching (`listings`, `bids`, `deliveries`, `ledger`).
-2. `FILL_FORM`: Conversational slot filling for phone numbers, commodity names, quantities, and roles across regional phonemes.
-3. `SEND_OTP`: Trigger on-screen 4-digit OTP generation and spoken verification replies.
-4. `CHANGE_LANGUAGE`: Live translation and dialect switching across English, Marathi (मराठी), and Bengali (বাংলা).
-5. `LOGOUT`: Clean voice session termination and state cache purging.
-
-## 🛠️ Usage Example
-```typescript
-import { speechClient } from "@/lib/speechClient";
-
-const response = await speechClient.sendCommandToBackend(
-  "ওটিপি পাঠাও", // Voice input
-  "bn",          // Language mode
-  "/login",      // Current route
-  "en",          // Preferred language
-  "bn",          // Page language
-  {},            // Form context
-  [],            // Conversation history
-  { isLoggedIn: false } // User authentication context
-);
-// Response returns structured AssistantResponse JSON with intent, action, and response_text.
-```
+## 🎯 Dispatched Action Primitives
+1. `CLICK`: Target node selector resolution and synthetic event dispatch.
+2. `TYPE`: Focused value entry with `input` and `change` event bubbling.
+3. `AUTO_FILL`: Multi-field continuous entity extraction from conversational speech.
+4. `SELECT_OPTION`: Fuzzy match and option index selection for `<select>` tags.
+5. `SCROLL`: Viewport movement (`UP`, `DOWN`, `TOP`, `BOTTOM`).

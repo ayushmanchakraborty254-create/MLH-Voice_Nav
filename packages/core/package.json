@@ -1,0 +1,13 @@
+﻿{
+  "name": "@voicedom/core",
+  "version": "1.0.0",
+  "description": "Universal AI DOM Navigation & Form Autopilot Core Engine",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "keywords": ["voice", "accessibility", "ai", "navigation", "form-autopilot", "whisper", "qwen"],
+  "author": "Aryan Samadder",
+  "license": "MIT"
+}

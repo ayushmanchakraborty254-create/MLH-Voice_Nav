@@ -1,0 +1,15 @@
+﻿{
+  "name": "voicedom-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "VoiceDOM: Universal AI Voice Navigation, Form Autopilot & Browser Accessibility Suite",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "start:demo": "npx serve demo"
+  },
+  "keywords": ["voicedom", "whisper", "qwen", "accessibility", "voice-navigation", "form-autopilot", "agent-skill", "mlh"],
+  "author": "Aryan Samadder",
+  "license": "MIT"
+}
