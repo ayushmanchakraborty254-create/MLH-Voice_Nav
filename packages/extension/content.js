@@ -82,36 +82,53 @@
         bottom: 20px;
         right: 20px;
         z-index: 2147483647;
-        background: rgba(15, 23, 42, 0.96);
+        background: #FEF9E7;
         backdrop-filter: blur(18px);
-        border: 1px solid rgba(16, 185, 129, 0.55);
-        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.65), 0 0 25px rgba(16, 185, 129, 0.3);
+        border: 1.5px solid #ECD9B0;
+        box-shadow: 0 12px 35px rgba(60, 35, 10, 0.22), 0 0 20px rgba(245, 158, 11, 0.2);
         border-radius: 16px;
         padding: 12px 16px;
-        color: #f8fafc;
+        color: #38210D;
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        width: 370px;
+        width: 380px;
         display: flex;
         flex-direction: column;
         gap: 8px;
         box-sizing: border-box;
+        transition: all 0.25s ease;
       }
       .vdom-ext-head {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 700;
-        color: #10b981;
+        color: #38210D;
       }
       .vdom-ext-badge {
-        font-size: 9px;
-        background: rgba(16, 185, 129, 0.2);
-        color: #34d399;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-weight: 600;
+        font-size: 9.5px;
+        background: #F8E5B8;
+        color: #78350F;
+        border: 1px solid #ECD9B0;
+        padding: 2px 7px;
+        border-radius: 9999px;
+        font-weight: 700;
         letter-spacing: 0.5px;
+      }
+      .vdom-ext-close {
+        background: transparent;
+        border: none;
+        color: #8C6239;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 2px 6px;
+        border-radius: 6px;
+        transition: all 0.15s ease;
+      }
+      .vdom-ext-close:hover {
+        background: #F4E4BC;
+        color: #38210D;
       }
       .vdom-input-wrapper {
         position: relative;
@@ -121,11 +138,11 @@
       }
       .vdom-ext-input {
         width: 100%;
-        background: rgba(0, 0, 0, 0.35);
-        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: #FFFFFF;
+        border: 1.5px solid #ECD9B0;
         border-radius: 9px;
         padding: 8px 34px 8px 12px;
-        color: #f1f5f9;
+        color: #38210D;
         font-size: 12px;
         font-family: inherit;
         outline: none;
@@ -133,20 +150,20 @@
         box-sizing: border-box;
       }
       .vdom-ext-input:focus {
-        border-color: #10b981;
-        box-shadow: 0 0 12px rgba(16, 185, 129, 0.35);
-        background: rgba(0, 0, 0, 0.5);
+        border-color: #D97706;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25);
+        background: #FFFFFF;
       }
       .vdom-ext-input::placeholder {
-        color: #94a3b8;
+        color: #A89078;
         font-size: 11.5px;
       }
       .vdom-input-send {
         position: absolute;
-        right: 6px;
+        right: 8px;
         background: transparent;
         border: none;
-        color: #10b981;
+        color: #D97706;
         cursor: pointer;
         padding: 4px;
         display: flex;
@@ -157,7 +174,7 @@
       }
       .vdom-input-send:hover {
         transform: scale(1.15);
-        color: #34d399;
+        color: #B45309;
       }
       .vdom-ext-footer {
         display: flex;
@@ -167,11 +184,12 @@
       }
       .vdom-ext-status {
         font-size: 11px;
-        color: #94a3b8;
+        color: #755233;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
         max-width: 170px;
+        font-weight: 500;
       }
       .vdom-btn-group {
         display: flex;
@@ -179,45 +197,51 @@
         gap: 6px;
       }
       .vdom-ext-btn {
-        background: #10b981;
-        border: none;
-        color: white;
+        background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 50%, #D97706 100%);
+        border: 1px solid #D97706;
+        color: #381E04;
         padding: 6px 12px;
         border-radius: 8px;
-        font-weight: 600;
+        font-weight: 700;
         font-size: 11px;
         cursor: pointer;
         display: flex;
         align-items: center;
         gap: 4px;
         transition: all 0.2s;
-        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        box-shadow: 0 2px 8px rgba(217, 119, 6, 0.25);
       }
       .vdom-ext-btn:hover {
-        background: #059669;
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
         transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);
       }
       .vdom-ext-btn.rec {
         background: #ef4444;
+        border-color: #dc2626;
+        color: white;
         box-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
         animation: vdom-pulse 1.5s infinite;
       }
       .vdom-read-btn {
-        background: rgba(56, 189, 248, 0.15);
-        border: 1px solid rgba(56, 189, 248, 0.4);
-        color: #38bdf8;
+        background: #FFFDF5;
+        border: 1.5px solid #ECD9B0;
+        color: #78350F;
+        box-shadow: none;
       }
       .vdom-read-btn:hover {
-        background: rgba(56, 189, 248, 0.3);
+        background: #FDF4D4;
+        border-color: #DDAF60;
+        transform: translateY(-1px);
       }
       @keyframes vdom-pulse {
         0%, 100% { opacity: 1; transform: scale(1); }
         50% { opacity: 0.85; transform: scale(0.97); }
       }
       @keyframes vdom-target-radar {
-        0% { outline: 4px solid #10b981; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.8); }
-        50% { outline: 4px solid #38bdf8; box-shadow: 0 0 0 16px rgba(16, 185, 129, 0); }
-        100% { outline: 4px solid #10b981; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        0% { outline: 4px solid #F59E0B; box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.8); }
+        50% { outline: 4px solid #D97706; box-shadow: 0 0 0 16px rgba(245, 158, 11, 0); }
+        100% { outline: 4px solid #F59E0B; box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
       }
       .vdom-radar-highlight {
         animation: vdom-target-radar 1.5s infinite !important;
@@ -227,13 +251,13 @@
       .vdom-pin-badge {
         position: absolute;
         z-index: 2147483646;
-        background: #10b981;
-        color: #0f172a;
+        background: #F59E0B;
+        color: #381E04;
         font-weight: 700;
         font-size: 11px;
         padding: 4px 8px;
         border-radius: 6px;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+        box-shadow: 0 4px 14px rgba(60, 30, 10, 0.3);
         pointer-events: none;
         display: flex;
         align-items: center;
@@ -247,8 +271,11 @@
     </style>
     <div id="voicedom-ext-bar">
       <div class="vdom-ext-head">
-        <span>🎙️ Cipher</span>
-        <span class="vdom-ext-badge" id="vdom-modal-badge">ACTIVE TAB</span>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span>🎙️ Cipher</span>
+          <span class="vdom-ext-badge" id="vdom-modal-badge">ACTIVE TAB</span>
+        </div>
+        <button id="vdom-btn-close" class="vdom-ext-close" title="Turn OFF Cipher">✕</button>
       </div>
       <div class="vdom-input-wrapper">
         <input 
@@ -961,6 +988,65 @@ Return STRICT JSON ONLY:
       stopListening();
     }
   });
+
+  // Close / Hide button handler on the floating bar
+  document.getElementById("vdom-btn-close")?.addEventListener("click", () => {
+    setExtensionEnabled(false);
+    if (typeof chrome !== "undefined" && chrome?.storage?.local) {
+      chrome.storage.local.set({ CIPHER_ENABLED: false });
+    }
+  });
+
+  // Extension ON / OFF State Machine
+  let isExtensionEnabled = true;
+
+  function setExtensionEnabled(enabled) {
+    isExtensionEnabled = Boolean(enabled);
+    const bar = document.getElementById("voicedom-ext-bar");
+    if (bar) {
+      bar.style.display = isExtensionEnabled ? "flex" : "none";
+    }
+    if (!isExtensionEnabled) {
+      stopListening();
+      if (window.speechSynthesis && isSpeaking) {
+        window.speechSynthesis.cancel();
+        isSpeaking = false;
+        if (readBtn) readBtn.innerText = "🔊 Read";
+      }
+      if (activeHighlightPin) {
+        activeHighlightPin.remove();
+        activeHighlightPin = null;
+      }
+    } else {
+      if (statusBox) statusBox.innerText = "Ready";
+    }
+  }
+
+  // Load initial ON / OFF state from chrome.storage
+  if (typeof chrome !== "undefined" && chrome?.storage?.local) {
+    chrome.storage.local.get(["CIPHER_ENABLED"], (res) => {
+      if (res && res.CIPHER_ENABLED === false) {
+        setExtensionEnabled(false);
+      }
+    });
+  }
+
+  // Listen for toggle / activate commands from the Extension popup
+  if (typeof chrome !== "undefined" && chrome?.runtime?.onMessage) {
+    chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+      if (msg.action === "TOGGLE_EXTENSION") {
+        setExtensionEnabled(msg.enabled);
+        sendResponse({ success: true, enabled: isExtensionEnabled });
+      } else if (msg.action === "ACTIVATE_VOICEDOM") {
+        setExtensionEnabled(true);
+        if (inputEl) inputEl.focus();
+        sendResponse({ success: true, enabled: true });
+      } else if (msg.action === "GET_STATUS") {
+        sendResponse({ enabled: isExtensionEnabled });
+      }
+      return true;
+    });
+  }
 
   function handleUrlOrDomChange() {
     getDOMSnapshot();
