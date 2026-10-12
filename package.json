@@ -1,8 +1,8 @@
-﻿{
-  "name": "voicedom-monorepo",
+{
+  "name": "cipher_jarvis",
   "version": "1.0.0",
   "private": true,
-  "description": "VoiceDOM: Universal AI Voice Navigation, Form Autopilot & Browser Accessibility Suite",
+  "description": "Cipher_Jarvis (Display: Cipher) — Universal AI Voice Navigation, Form Autopilot & Browser Accessibility Suite",
   "workspaces": [
     "packages/*"
   ],

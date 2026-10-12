@@ -4,19 +4,46 @@
   window.__voicedom_injected = true;
 
   let GROQ_API_KEY = "";
-  if (typeof chrome !== "undefined" && chrome?.storage?.local) {
-    chrome.storage.local.get(["GROQ_API_KEY"], (result) => {
-      if (result && result.GROQ_API_KEY) {
-        GROQ_API_KEY = result.GROQ_API_KEY;
+
+  async function loadGroqKey() {
+    if (typeof chrome !== "undefined" && chrome?.storage?.local) {
+      try {
+        const stored = await chrome.storage.local.get(["GROQ_API_KEY"]);
+        if (stored?.GROQ_API_KEY) {
+          GROQ_API_KEY = stored.GROQ_API_KEY;
+          return;
+        }
+      } catch (_) {}
+    }
+    if (typeof window !== "undefined" && window.CIPHER_LOCAL_KEY) {
+      GROQ_API_KEY = window.CIPHER_LOCAL_KEY;
+      return;
+    }
+    try {
+      if (typeof chrome !== "undefined" && chrome?.runtime?.getURL) {
+        const url = chrome.runtime.getURL("config.local.js");
+        const resp = await fetch(url);
+        if (resp.ok) {
+          const text = await resp.text();
+          const match = text.match(/gsk_[A-Za-z0-9]+/);
+          if (match && match[0]) {
+            GROQ_API_KEY = match[0];
+            if (chrome?.storage?.local) {
+              chrome.storage.local.set({ GROQ_API_KEY: match[0] });
+            }
+          }
+        }
+      }
+    } catch (_) {}
+  }
+  loadGroqKey();
+
+  if (typeof chrome !== "undefined" && chrome?.storage?.onChanged) {
+    chrome.storage.onChanged.addListener((changes) => {
+      if (changes.GROQ_API_KEY?.newValue) {
+        GROQ_API_KEY = changes.GROQ_API_KEY.newValue;
       }
     });
-    if (chrome?.storage?.onChanged) {
-      chrome.storage.onChanged.addListener((changes) => {
-        if (changes.GROQ_API_KEY?.newValue) {
-          GROQ_API_KEY = changes.GROQ_API_KEY.newValue;
-        }
-      });
-    }
   }
   const GROQ_MODEL = "qwen/qwen3.8-27b";
 
@@ -220,7 +247,7 @@
     </style>
     <div id="voicedom-ext-bar">
       <div class="vdom-ext-head">
-        <span>🎙️ VoiceDOM Universal AI</span>
+        <span>🎙️ Cipher</span>
         <span class="vdom-ext-badge" id="vdom-modal-badge">ACTIVE TAB</span>
       </div>
       <div class="vdom-input-wrapper">
@@ -228,7 +255,7 @@
           type="text" 
           id="vdom-ext-input" 
           class="vdom-ext-input" 
-          placeholder="Give command Navigate or Read Screen..." 
+          placeholder="Ask Cipher: click, fill, scroll, read..." 
           autocomplete="off"
         />
         <button id="vdom-btn-send" class="vdom-input-send" title="Send command (Enter)">
@@ -703,7 +730,7 @@
 
     const recentHistoryText = conversationHistory.slice(-4).map(h => `${h.role === 'user' ? 'User' : 'Assistant'}: "${h.content}"`).join("\n");
 
-    const systemPrompt = `You are VoiceDOM: an autonomous Universal Web Navigation & Form Autopilot.
+    const systemPrompt = `You are Cipher (Cipher_Jarvis): an autonomous Universal Web Navigation & Form Autopilot.
 Active Page: "${snapshot.title}" (${snapshot.url})
 Modal Active: ${snapshot.hasActiveModal ? "YES" : "NO"}
 Interactive Elements on page: ${JSON.stringify(snapshot.elements)}
@@ -746,7 +773,7 @@ Return STRICT JSON ONLY:
         activeKey = window.__VOICEDOM_API_KEY;
       }
       if (!activeKey) {
-        setStatus("⚠️ Please enter your Groq API Key in VoiceDOM Extension popup", false);
+        setStatus("⚠️ Please enter your Groq API Key in Cipher Extension popup", false);
         return;
       }
 
@@ -954,5 +981,5 @@ Return STRICT JSON ONLY:
     handleUrlOrDomChange();
   };
 
-  console.log("VoiceDOM Universal AI Injected with Clean Field Overwrite & Replace Support.");
+  console.log("Cipher (Cipher_Jarvis) Universal AI Injected with Clean Field Overwrite & Replace Support.");
 })();

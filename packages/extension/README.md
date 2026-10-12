@@ -1,4 +1,4 @@
-﻿# 🌐 VoiceDOM Universal Browser Extension (Chrome / Edge / Brave)
+# 🌐 Cipher (Cipher_Jarvis) Universal Browser Extension (Chrome / Edge / Brave)
 
 Run multilingual voice navigation, form autopilot, and screen reading on **ANY** website on the internet (Amazon, Wikipedia, Government Portals, University Registrations, etc.).
 
@@ -19,11 +19,10 @@ Run multilingual voice navigation, form autopilot, and screen reading on **ANY**
 
 ### Step 3: Load Unpacked Extension
 1. Click the **"Load unpacked"** button at the top left.
-2. In the folder picker window, navigate to this project and select the **`extension`** folder inside `packages`:
+2. In the folder picker window, select the **`packages/extension`** folder:
    ```
-   Site_Reader/packages/extension
+   C:\Users\ayush\Desktop\MLH\SIH_voice_Nav\packages\extension
    ```
-   *(Full path: `c:\Users\ARYAN SAMADDER\Desktop\VSCode\Projects\SIH_voice_Nav\Site_Reader\packages\extension`)*
 3. Click **Select Folder**.
 
 ---
@@ -31,7 +30,7 @@ Run multilingual voice navigation, form autopilot, and screen reading on **ANY**
 ## 🎯 How to Use on Any Website
 
 1. Open **any website** in your browser (e.g. `https://amazon.in`, `https://wikipedia.org`, `https://goaps.iitm.ac.in`).
-2. You will see the **VoiceDOM Floating Radar Bar** in the bottom-right corner.
+2. You will see the **Cipher Floating Radar Bar** in the bottom-right corner.
 3. You can interact in two ways:
    - **🎙️ Voice**: Click **`Speak`** and speak in English, Bengali, Marathi, or Hindi.
    - **⌨️ Typed Command**: Type your command into the input box and press **`Enter`**.
